@@ -78,17 +78,7 @@ export function Footer() {
           ))}
         </div>
 
-        {/* disclaimer */}
-        <div className="mt-12 flex items-start gap-3 rounded-2xl border border-crimson/20 bg-crimson/5 p-4 text-xs text-foreground/60">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--crimson-soft))]" />
-          <p>
-            <strong className="text-foreground/80">Safety note:</strong> Spider Identifier provides the closest
-            AI match, not a guaranteed identification or medical diagnosis. Never handle a spider you suspect is
-            venomous, and for any suspected bite seek professional medical advice immediately.
-          </p>
-        </div>
-
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/45 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/45 sm:flex-row">
           <p>
             © {year} {siteConfig.name}. All rights reserved.
           </p>
@@ -103,6 +93,16 @@ export function Footer() {
               Disclaimer
             </Link>
           </div>
+        </div>
+
+        {/* safety note — at the very bottom of the footer */}
+        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-crimson/20 bg-crimson/5 p-4 text-xs text-foreground/60">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--crimson-soft))]" />
+          <p>
+            <strong className="text-foreground/80">Safety note:</strong> Spider Identifier provides the closest
+            AI match, not a guaranteed identification or medical diagnosis. Never handle a spider you suspect is
+            venomous, and for any suspected bite seek professional medical advice immediately.
+          </p>
         </div>
       </div>
     </footer>

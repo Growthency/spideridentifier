@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ScanSearch, Ruler, MapPin, Home, Bug, Sparkles, CheckCircle2 } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
-import { SpeciesArt } from "@/components/ui/SpeciesArt";
+import { SpeciesMedia } from "@/components/ui/SpeciesMedia";
+import { photoCredits } from "@/content/photoCredits";
 import { VenomBadge } from "@/components/ui/VenomBadge";
 import { SpeciesCard } from "@/components/ui/SpeciesCard";
 import { Button } from "@/components/ui/Button";
@@ -91,8 +92,28 @@ export default async function SpeciesDetailPage({
             {/* art + facts */}
             <div className="lg:col-span-2">
               <div className="gradient-border overflow-hidden rounded-4xl p-1.5">
-                <SpeciesArt accent={species.accent} className="aspect-square w-full rounded-[1.85rem]" markClassName="h-28 w-28" />
+                <SpeciesMedia
+                  slug={species.slug}
+                  accent={species.accent}
+                  alt={`${species.common_name} (${species.scientific_name})`}
+                  className="aspect-square w-full rounded-[1.85rem]"
+                  markClassName="h-28 w-28"
+                />
               </div>
+              {photoCredits[species.slug] && (
+                <p className="mt-2 text-center text-[11px] text-foreground/40">
+                  Photo:{" "}
+                  <a
+                    href={photoCredits[species.slug].source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-gold"
+                  >
+                    {photoCredits[species.slug].artist}
+                  </a>{" "}
+                  · {photoCredits[species.slug].license} · Wikimedia Commons
+                </p>
+              )}
               <div className="mt-5 grid gap-3">
                 {facts.map((f) => (
                   <div key={f.label} className="flex items-start gap-3 rounded-2xl border border-foreground/8 bg-card/50 p-4">

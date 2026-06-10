@@ -76,14 +76,19 @@ All keys live in **`.env.local`** (git-ignored, never pushed). That file contain
 
 ## 🖼️ Image policy — WebP everywhere
 
-This project never ships JPG/PNG. The design uses crisp vector SVG/CSS art, and:
+Every image on the site is **WebP** — there are no JPG/PNG assets.
 
-- **Admin uploads** are converted to optimized WebP by `sharp` before upload (`src/app/api/upload/route.ts`).
+- **Species photos** are real, **license-safe** images (CC0 / Public Domain / CC-BY / CC-BY-SA) sourced from Wikimedia Commons, converted to optimized WebP and stored in `public/images/species/`. Attribution for each photo (artist + license + source) lives in `public/images/species/CREDITS.json` and is shown on every species page. Re-fetch/refresh them anytime:
+  ```bash
+  npm run fetch:images
+  ```
+- **Admin uploads** are converted to optimized WebP by `sharp` before they ever touch storage (`src/app/api/upload/route.ts`) — so the database only holds `.webp`.
 - **Bulk-convert** any images you drop into a folder:
   ```bash
   npm run convert:webp            # converts everything in /public
   node scripts/convert-to-webp.mjs ./my/folder --delete
   ```
+- Decorative art (logo, species cards' fallback, blog covers) is vector **SVG/CSS**, so it's crisp at any size and ships zero raster weight.
 
 ---
 

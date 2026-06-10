@@ -25,7 +25,8 @@ export function Hero() {
 
           <Reveal delay={0.05}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
-              <span className="text-gradient-animate">Identify any spider</span>
+              <span className="text-gradient-animate">Identify</span>{" "}
+              <span className="text-foreground">any spider</span>
               <br />
               <Typewriter words={heroRotatingWords} />
             </h1>

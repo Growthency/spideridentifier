@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, MapPin, Ruler } from "lucide-react";
-import { SpeciesArt } from "@/components/ui/SpeciesArt";
+import { SpeciesMedia } from "@/components/ui/SpeciesMedia";
 import { VenomBadge } from "@/components/ui/VenomBadge";
 import type { Species } from "@/lib/types";
 
@@ -11,8 +11,10 @@ export function SpeciesCard({ species }: { species: Species }) {
       className="group relative flex flex-col overflow-hidden rounded-3xl border border-foreground/8 bg-card/60 transition-all duration-500 hover:-translate-y-1 hover:border-gold/30 hover:shadow-card"
     >
       <div className="relative h-44 w-full">
-        <SpeciesArt
+        <SpeciesMedia
+          slug={species.slug}
           accent={species.accent}
+          alt={`${species.common_name} (${species.scientific_name})`}
           className="h-full w-full transition-transform duration-700 group-hover:scale-105"
           markClassName="transition-transform duration-700 group-hover:rotate-6"
         />
