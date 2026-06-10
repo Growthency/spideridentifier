@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Animated spider-web particle field: drifting gold dots connected by thin
- * "silk" lines when they come close. Fixed, behind all content. Respects
+ * Animated spider-web particle field: drifting dots connected by thin "silk"
+ * lines when they come close. Fixed, behind all content. The colour is read
+ * from the --particle CSS variable so it stays visible in BOTH light and dark
+ * themes (re-read whenever the theme class changes). Respects
  * prefers-reduced-motion (renders a single static frame).
  */
 export function WebParticles() {
@@ -23,6 +25,18 @@ export function WebParticles() {
     let h = 0;
     let raf = 0;
     let particles: { x: number; y: number; vx: number; vy: number }[] = [];
+
+    // Read the themed colour (space-separated "r g b") → "r,g,b" for rgba().
+    const readColor = () => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue("--particle").trim();
+      return (v || "245 165 36").split(/\s+/).join(",");
+    };
+    let rgb = readColor();
+
+    const themeObserver = new MutationObserver(() => {
+      rgb = readColor();
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     const resize = () => {
       w = canvas.clientWidth;
@@ -55,7 +69,7 @@ export function WebParticles() {
           const dy = a.y - b.y;
           const dist = Math.hypot(dx, dy);
           if (dist < DIST) {
-            ctx.strokeStyle = `rgba(245,165,36,${0.18 * (1 - dist / DIST)})`;
+            ctx.strokeStyle = `rgba(${rgb},${0.22 * (1 - dist / DIST)})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -65,9 +79,9 @@ export function WebParticles() {
         }
       }
       for (const p of particles) {
-        ctx.fillStyle = "rgba(245,165,36,0.55)";
+        ctx.fillStyle = `rgba(${rgb},0.7)`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.7, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
         ctx.fill();
       }
     };
@@ -84,6 +98,7 @@ export function WebParticles() {
     window.addEventListener("resize", resize);
     return () => {
       cancelAnimationFrame(raf);
+      themeObserver.disconnect();
       window.removeEventListener("resize", resize);
     };
   }, []);
@@ -92,7 +107,7 @@ export function WebParticles() {
     <canvas
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-70"
+      className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-80"
     />
   );
 }

@@ -5,7 +5,7 @@ import { speciesLibrary } from "@/content/species";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteConfig.url;
-  const staticRoutes = ["", "/identify", "/species", "/anatomy", "/blog", "/pricing", "/about", "/contact", "/privacy", "/terms", "/disclaimer"];
+  const staticRoutes = ["", "/species", "/anatomy", "/blog", "/pricing", "/about", "/contact", "/privacy", "/terms", "/disclaimer"];
 
   const routes: MetadataRoute.Sitemap = staticRoutes.map((path) => ({
     url: `${base}${path}`,

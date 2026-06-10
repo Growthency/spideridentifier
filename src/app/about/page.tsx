@@ -36,7 +36,7 @@ export default function AboutPage() {
         title={<>Making spiders <span className="text-gradient">understood, not feared</span></>}
         subtitle="We built Spider Identifier so that anyone — from the curious to the cautious — can recognise a spider in seconds and know exactly how to respond."
       >
-        <Button href="/identify" size="lg">
+        <Button href="/#identify" size="lg">
           <ScanSearch className="h-5 w-5" /> Try the identifier
         </Button>
       </PageHero>
@@ -160,7 +160,7 @@ export default function AboutPage() {
             Have a question or a spider to identify?
           </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button href="/identify" size="lg">
+            <Button href="/#identify" size="lg">
               <ScanSearch className="h-5 w-5" /> Identify a spider
             </Button>
             <Button href="/contact" variant="secondary" size="lg">

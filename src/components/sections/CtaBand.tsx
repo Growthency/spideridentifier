@@ -23,7 +23,7 @@ export function CtaBand() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Button href="/identify" size="lg">
+              <Button href="/#identify" size="lg">
                 <ScanSearch className="h-5 w-5" />
                 Identify a Spider Free
               </Button>

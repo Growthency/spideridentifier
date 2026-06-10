@@ -114,7 +114,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <p className="max-w-md text-sm text-foreground/65">
                 Upload a photo and confirm the species in seconds — with a venom-risk indicator.
               </p>
-              <Button href="/identify" size="lg">
+              <Button href="/#identify" size="lg">
                 <ScanSearch className="h-5 w-5" /> Identify a Spider Free
               </Button>
             </div>

@@ -1,76 +1,136 @@
 export interface PricingTier {
   name: string;
-  tagline: string;
-  monthly: number;
-  yearly: number; // per month, billed yearly
+  audience: string;
+  firstMonth: number; // discounted first month
+  regular: number; // ongoing per month
+  credits: number;
+  ids: string; // approx identifications
+  perId: string;
   highlighted?: boolean;
   cta: { label: string; href: string };
   features: string[];
 }
 
+export const pricingHeadline = "Try risk-free for 7 days. Then save 50% on month one.";
+
+export const pricingSub =
+  "Monthly plans with fresh credits every month. Cancel from your dashboard in one click. 14-day money-back guarantee, no questions asked.";
+
+export const pricingPromo = ["7 days free", "50% off your first month", "14-day money-back", "Cancel anytime"];
+
 export const pricingTiers: PricingTier[] = [
   {
-    name: "Free",
-    tagline: "Everything you need to identify the spider on your wall.",
-    monthly: 0,
-    yearly: 0,
-    cta: { label: "Start free", href: "/identify" },
+    name: "Starter",
+    audience: "Curious spider-spotters getting started",
+    firstMonth: 2.49,
+    regular: 4.99,
+    credits: 120,
+    ids: "~12 identifications / mo",
+    perId: "$0.42 per ID",
+    cta: { label: "Start 7-day free trial", href: "/#identify" },
     features: [
-      "5 identifications per day",
-      "Venom-risk indicator on every result",
-      "Confidence score & top-3 matches",
-      "Full species library access",
-      "All identification blog guides",
+      "Full AI species identification",
+      "Venom-risk warning on every result",
+      "Look-alike & similar-species alerts",
+      "120 credits every month",
+      "7-day free trial",
+      "Cancel anytime",
+    ],
+  },
+  {
+    name: "Explorer",
+    audience: "Weekend explorers & gardeners",
+    firstMonth: 4.99,
+    regular: 9.99,
+    credits: 550,
+    ids: "~55 identifications / mo",
+    perId: "$0.18 per ID",
+    highlighted: true,
+    cta: { label: "Start 7-day free trial", href: "/#identify" },
+    features: [
+      "Everything in Starter",
+      "550 credits every month",
+      "PDF identification reports",
+      "Full field-journal access",
+      "Priority AI — faster results",
     ],
   },
   {
     name: "Pro",
-    tagline: "For the curious, the cautious and the spider-obsessed.",
-    monthly: 9,
-    yearly: 7,
-    highlighted: true,
-    cta: { label: "Go Pro", href: "/contact" },
+    audience: "Serious naturalists & arachnologists",
+    firstMonth: 9.99,
+    regular: 19.99,
+    credits: 1200,
+    ids: "~120 identifications / mo",
+    perId: "$0.17 per ID — best value",
+    cta: { label: "Start 7-day free trial", href: "/#identify" },
     features: [
-      "Unlimited identifications",
-      "Full species profiles & look-alike alerts",
-      "Location-based accuracy boost",
-      "Identification history & saved spiders",
-      "Priority processing",
-      "Email support",
+      "Everything in Explorer",
+      "1,200 credits every month",
+      "CSV data export",
+      "Priority customer support",
+      "Best value per identification",
     ],
   },
+];
+
+export const freeTier = {
+  name: "Just trying it out?",
+  blurb: "Get 30 free credits — about 3 identifications — with no credit card. Free forever.",
+  cta: { label: "Identify a spider free", href: "/#identify" },
+};
+
+export const pricingHowItWorks = [
   {
-    name: "Expert",
-    tagline: "For researchers, educators and pest-control teams.",
-    monthly: 29,
-    yearly: 24,
-    cta: { label: "Talk to us", href: "/contact" },
-    features: [
-      "Everything in Pro",
-      "API access for your own apps",
-      "Bulk image identification",
-      "3 team seats included",
-      "CSV export & reporting",
-      "Dedicated priority support",
-    ],
+    step: "01",
+    title: "Start your 7-day free trial",
+    desc: "Full plan access with no charges during the trial. Cancel before it ends and you pay nothing.",
+  },
+  {
+    step: "02",
+    title: "50% off your first paid month",
+    desc: "The discount is applied automatically at checkout — no promo code to remember.",
+  },
+  {
+    step: "03",
+    title: "Credits refresh every month",
+    desc: "Your plan tops up with fresh credits each month, on a use-it-or-lose-it basis.",
+  },
+  {
+    step: "04",
+    title: "Cancel anytime, one click",
+    desc: "Manage or cancel your plan from your dashboard whenever you like — no lock-in.",
   },
 ];
 
 export const pricingFaqs = [
   {
-    q: "Is it really free to try?",
-    a: "Yes. You can identify spiders on the Free plan with no credit card and no account required. Upgrade only when you want unlimited IDs and the advanced features.",
+    q: "How does the 7-day free trial work?",
+    a: "You get full access to your chosen plan for 7 days at no charge. Cancel any time before the trial ends and you won't be billed a cent.",
   },
   {
-    q: "Can I change or cancel my plan anytime?",
-    a: "Absolutely. Plans are month-to-month (or yearly for a discount) and you can upgrade, downgrade or cancel whenever you like — no lock-in.",
+    q: "How is the 50% first-month discount applied?",
+    a: "It's applied automatically at checkout after your trial — there's no code to enter. Your first paid month is half price, then the regular monthly rate applies.",
   },
   {
-    q: "What happens when I hit the free daily limit?",
-    a: "You can keep browsing the species library and guides, and your limit resets every day. Upgrade to Pro for unlimited identifications.",
+    q: "Can I cancel anytime?",
+    a: "Yes. Plans are month-to-month and you can cancel in one click from your dashboard. There's no contract and no lock-in.",
   },
   {
-    q: "Do you offer plans for schools or teams?",
-    a: "Yes — the Expert plan includes team seats, and we offer custom education and research pricing. Get in touch and we'll sort you out.",
+    q: "What's your refund policy?",
+    a: "Every paid plan is covered by a 14-day money-back guarantee, no questions asked. If you're not happy, we'll refund you.",
+  },
+  {
+    q: "Do unused credits roll over?",
+    a: "Credits refresh each month and don't roll over, so pick the plan that matches how often you identify. You can upgrade or downgrade anytime.",
+  },
+  {
+    q: "What if an identification fails?",
+    a: "If the AI can't return a confident match, that identification is automatically refunded to your credit balance — you only spend credits on real results.",
   },
 ];
+
+export const pricingTrust = {
+  methods: ["Visa", "Mastercard", "PayPal", "AMEX", "Apple Pay", "Google Pay"],
+  note: "256-bit SSL encryption · No hidden charges · 14-day money-back guarantee",
+};

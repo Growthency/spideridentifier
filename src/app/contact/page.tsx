@@ -52,7 +52,7 @@ export default function ContactPage() {
                 <p className="mt-1 text-sm text-foreground/60">
                   Skip the wait — upload a photo and get an instant species match.
                 </p>
-                <Button href="/identify" size="sm" className="mt-4">
+                <Button href="/#identify" size="sm" className="mt-4">
                   <ScanSearch className="h-4 w-4" /> Identify a spider
                 </Button>
               </div>

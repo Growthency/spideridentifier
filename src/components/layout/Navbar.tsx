@@ -81,7 +81,7 @@ export function Navbar() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button href="/identify" size="sm" className="hidden sm:inline-flex">
+              <Button href="/#identify" size="sm" className="hidden sm:inline-flex">
                 <ScanSearch className="h-4 w-4" />
                 Identify Free
               </Button>
@@ -131,7 +131,7 @@ export function Navbar() {
                 ))}
               </ul>
               <div className="p-2 pt-3">
-                <Button href="/identify" size="lg" className="w-full">
+                <Button href="/#identify" size="lg" className="w-full">
                   <ScanSearch className="h-5 w-5" />
                   Identify a Spider — Free
                 </Button>

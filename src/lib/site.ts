@@ -32,7 +32,7 @@ export const siteConfig = {
 
 export const mainNav = [
   { title: "Home", href: "/" },
-  { title: "Identify", href: "/identify" },
+  { title: "Identify", href: "/#identify" },
   { title: "Species", href: "/species" },
   { title: "Anatomy", href: "/anatomy" },
   { title: "Blog", href: "/blog" },
@@ -45,7 +45,7 @@ export const footerNav = {
   explore: {
     title: "Explore",
     links: [
-      { title: "Spider Identifier", href: "/identify" },
+      { title: "Spider Identifier", href: "/#identify" },
       { title: "Species Library", href: "/species" },
       { title: "Spider Anatomy", href: "/anatomy" },
       { title: "Identification Blog", href: "/blog" },

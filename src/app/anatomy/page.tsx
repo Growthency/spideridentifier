@@ -103,7 +103,7 @@ export default function AnatomyPage() {
           </div>
 
           <div className="mt-16 text-center">
-            <Button href="/identify" size="lg">
+            <Button href="/#identify" size="lg">
               <ScanSearch className="h-5 w-5" /> Put it to the test — identify a spider
             </Button>
           </div>

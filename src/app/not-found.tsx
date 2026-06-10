@@ -20,7 +20,7 @@ export default function NotFound() {
           <Button href="/" size="lg">
             <Home className="h-5 w-5" /> Back home
           </Button>
-          <Button href="/identify" variant="secondary" size="lg">
+          <Button href="/#identify" variant="secondary" size="lg">
             <ScanSearch className="h-5 w-5" /> Identify a spider
           </Button>
         </div>

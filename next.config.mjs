@@ -24,6 +24,10 @@ const nextConfig = {
   },
   // Keep the first production build friction-free for the client.
   eslint: { ignoreDuringBuilds: true },
+  // The identifier now lives on the home page; bounce the old route to it.
+  async redirects() {
+    return [{ source: "/identify", destination: "/#identify", permanent: true }];
+  },
 };
 
 export default nextConfig;

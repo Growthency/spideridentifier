@@ -16,6 +16,7 @@
   --grid-line: rgba(245, 165, 36, 0.08);
   --gold-soft: 182 113 10; /* readable gold on light */
   --crimson-soft: 162 28 51;
+  --particle: 196 92 30; /* warm amber — visible on light cream */
 }
 
 .dark {
@@ -32,6 +33,7 @@
   --grid-line: rgba(245, 165, 36, 0.06);
   --gold-soft: 250 211 137; /* gold-200 on dark */
   --crimson-soft: 235 111 134;
+  --particle: 245 165 36; /* gold — glows on dark obsidian */
 }
 
 @layer base {

@@ -130,7 +130,7 @@ export default async function SpeciesDetailPage({
               </div>
 
               <div className="mt-8">
-                <Button href="/identify" size="lg">
+                <Button href="/#identify" size="lg">
                   <ScanSearch className="h-5 w-5" />
                   Identify your spider
                 </Button>

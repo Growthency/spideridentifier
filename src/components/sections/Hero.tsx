@@ -40,7 +40,7 @@ export function Hero() {
 
           <Reveal delay={0.15}>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button href="/identify" size="lg">
+              <Button href="/#identify" size="lg">
                 <ScanSearch className="h-5 w-5" />
                 Identify a Spider
               </Button>
@@ -68,7 +68,7 @@ export function Hero() {
 
         {/* stats */}
         <Reveal delay={0.1}>
-          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-4 rounded-4xl glass-card p-6 sm:p-8 md:grid-cols-4">
+          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-2 gap-4 rounded-4xl glass-card p-6 sm:p-8 md:grid-cols-4">
             {siteConfig.stats.map((s) => (
               <div key={s.label} className="text-center">
                 <div className="font-display text-3xl font-extrabold text-gradient sm:text-4xl">
@@ -83,7 +83,7 @@ export function Hero() {
           </p>
         </Reveal>
 
-        <ScrollCue className="mt-14" />
+        <ScrollCue className="mt-7" />
       </div>
     </section>
   );
