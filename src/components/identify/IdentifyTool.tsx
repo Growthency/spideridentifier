@@ -136,7 +136,7 @@ export function IdentifyTool({ className }: { className?: string }) {
                       initial={{ top: "0%" }}
                       animate={{ top: ["0%", "100%", "0%"] }}
                       transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
-                      className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_20px_4px_rgba(245,165,36,0.6)]"
+                      className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_20px_4px_rgba(16,185,129,0.6)]"
                     />
                     <div className="absolute inset-0 grid place-items-center">
                       <div className="flex items-center gap-2.5 rounded-full glass-card px-4 py-2 text-sm font-medium">

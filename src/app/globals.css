@@ -13,10 +13,10 @@
   --glass-card: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
   --glass-brd: rgba(28, 25, 23, 0.08);
   --shadow-card: 0 18px 50px -24px rgba(60, 40, 20, 0.28);
-  --grid-line: rgba(245, 165, 36, 0.08);
-  --gold-soft: 182 113 10; /* readable gold on light */
+  --grid-line: rgba(16, 185, 129, 0.08);
+  --gold-soft: 4 120 87; /* readable gold on light */
   --crimson-soft: 162 28 51;
-  --particle: 196 92 30; /* warm amber — visible on light cream */
+  --particle: 5 150 105; /* warm amber — visible on light cream */
 }
 
 .dark {
@@ -30,10 +30,10 @@
   --glass-card: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   --glass-brd: rgba(255, 255, 255, 0.08);
   --shadow-card: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
-  --grid-line: rgba(245, 165, 36, 0.06);
-  --gold-soft: 250 211 137; /* gold-200 on dark */
+  --grid-line: rgba(16, 185, 129, 0.06);
+  --gold-soft: 110 231 183; /* gold-200 on dark */
   --crimson-soft: 235 111 134;
-  --particle: 245 165 36; /* gold — glows on dark obsidian */
+  --particle: 16 185 129; /* gold — glows on dark obsidian */
 }
 
 @layer base {
@@ -56,7 +56,7 @@
   }
 
   ::selection {
-    background: rgba(245, 165, 36, 0.28);
+    background: rgba(16, 185, 129, 0.28);
     color: #fff;
   }
 
@@ -69,20 +69,20 @@
     background: rgb(var(--background));
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #f5a524, #f0734a 50%, #e23e57);
+    background: linear-gradient(180deg, #10b981, #22c55e 50%, #0d9488);
     border-radius: 999px;
     border: 3px solid rgb(var(--background));
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #f8bc50, #f5a524 50%, #e23e57);
+    background: linear-gradient(180deg, #34d399, #10b981 50%, #0d9488);
   }
   /* Firefox */
   * {
-    scrollbar-color: #f5a524 rgb(var(--background));
+    scrollbar-color: #10b981 rgb(var(--background));
   }
 
   :focus-visible {
-    outline: 2px solid #f5a524;
+    outline: 2px solid #10b981;
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -109,7 +109,7 @@
 
   /* Animated colour-shifting brand gradient — used for every highlighted word */
   .text-gradient {
-    background-image: linear-gradient(90deg, #f8bc50, #f5a524, #e23e57, #f0734a, #f5a524, #f8bc50);
+    background-image: linear-gradient(90deg, #34d399, #10b981, #0d9488, #22c55e, #10b981, #34d399);
     background-size: 250% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -130,7 +130,7 @@
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(245, 165, 36, 0.6), rgba(226, 62, 87, 0.25), transparent 60%);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.6), rgba(13, 148, 136, 0.25), transparent 60%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -143,7 +143,7 @@
       90deg,
       rgb(var(--foreground)) 0%,
       rgb(var(--foreground)) 35%,
-      #f5a524 50%,
+      #10b981 50%,
       rgb(var(--foreground)) 65%,
       rgb(var(--foreground)) 100%
     );
@@ -156,7 +156,7 @@
 
   /* Continuously colour-shifting gradient text */
   .text-gradient-animate {
-    background-image: linear-gradient(90deg, #f8bc50, #f5a524, #e23e57, #f0734a, #f5a524, #f8bc50);
+    background-image: linear-gradient(90deg, #34d399, #10b981, #0d9488, #22c55e, #10b981, #34d399);
     background-size: 250% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -198,11 +198,11 @@
 .prose-spider {
   --tw-prose-body: rgb(var(--foreground) / 0.82);
   --tw-prose-headings: rgb(var(--foreground));
-  --tw-prose-links: #f5a524;
+  --tw-prose-links: #10b981;
   --tw-prose-bold: rgb(var(--foreground));
-  --tw-prose-bullets: #f5a524;
+  --tw-prose-bullets: #10b981;
   --tw-prose-quotes: rgb(var(--foreground) / 0.9);
-  --tw-prose-quote-borders: #e23e57;
+  --tw-prose-quote-borders: #0d9488;
   --tw-prose-hr: rgb(var(--border));
   --tw-prose-th-borders: rgb(var(--border));
   --tw-prose-td-borders: rgb(var(--border));
@@ -212,7 +212,7 @@
   scroll-margin-top: 6rem;
 }
 .prose-spider :where(blockquote):not(:where([class~="not-prose"] *)) {
-  background: rgba(226, 62, 87, 0.06);
+  background: rgba(13, 148, 136, 0.06);
   border-radius: 0.75rem;
   padding: 0.75rem 1.25rem;
   font-style: normal;
@@ -222,7 +222,7 @@
   border-radius: 0.75rem;
 }
 .prose-spider :where(thead th):not(:where([class~="not-prose"] *)) {
-  background: rgba(245, 165, 36, 0.1);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -45,8 +45,8 @@ export function ScrollToTop() {
             />
             <defs>
               <linearGradient id="stt-grad" x1="0" y1="0" x2="56" y2="56">
-                <stop stopColor="#F5A524" />
-                <stop offset="1" stopColor="#E23E57" />
+                <stop stopColor="#10b981" />
+                <stop offset="1" stopColor="#0d9488" />
               </linearGradient>
             </defs>
           </svg>

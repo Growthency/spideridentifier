@@ -96,7 +96,7 @@ export function Footer() {
         </div>
 
         {/* safety note — at the very bottom of the footer */}
-        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-crimson/20 bg-crimson/5 p-4 text-xs text-foreground/60">
+        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-foreground/60">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--crimson-soft))]" />
           <p>
             <strong className="text-foreground/80">Safety note:</strong> Spider Identifier provides the closest

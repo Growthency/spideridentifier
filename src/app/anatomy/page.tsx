@@ -49,7 +49,7 @@ export default function AnatomyPage() {
             </div>
             <div className="order-1 lg:order-2 lg:sticky lg:top-28">
               <div className="gradient-border relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-4xl bg-card/60 p-6">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(245,165,36,0.12),transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.12),transparent_60%)]" />
                 <AnatomySpider active="body" />
               </div>
             </div>
@@ -75,7 +75,7 @@ export default function AnatomyPage() {
                   <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-gold/20 bg-gold/10">
                     <svg viewBox="0 0 48 48" className="h-8 w-8" fill="none" aria-hidden="true">
                       {[6, 12, 18].map((r) => (
-                        <circle key={r} cx="24" cy="24" r={r} stroke="#F5A524" strokeWidth="1" opacity="0.7" />
+                        <circle key={r} cx="24" cy="24" r={r} stroke="#10b981" strokeWidth="1" opacity="0.7" />
                       ))}
                       {Array.from({ length: 8 }).map((_, k) => {
                         const a = (k / 8) * Math.PI * 2;
@@ -86,7 +86,7 @@ export default function AnatomyPage() {
                             y1="24"
                             x2={round(24 + Math.cos(a) * 20)}
                             y2={round(24 + Math.sin(a) * 20)}
-                            stroke="#F5A524"
+                            stroke="#10b981"
                             strokeWidth="0.8"
                             opacity="0.5"
                           />

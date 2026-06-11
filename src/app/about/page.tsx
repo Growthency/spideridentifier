@@ -74,13 +74,13 @@ export default function AboutPage() {
 
             <Reveal direction="left">
               <div className="gradient-border relative aspect-square overflow-hidden rounded-4xl bg-card/60">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(245,165,36,0.15),transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.15),transparent_60%)]" />
                 <div className="absolute inset-0 grid place-items-center">
                   <SpiderMark className="h-40 w-40 animate-float" />
                 </div>
                 <svg className="absolute inset-0 h-full w-full opacity-20" viewBox="0 0 200 200" aria-hidden="true">
                   {[40, 70, 100].map((r) => (
-                    <circle key={r} cx="100" cy="100" r={r} fill="none" stroke="#F5A524" strokeWidth="0.5" />
+                    <circle key={r} cx="100" cy="100" r={r} fill="none" stroke="#10b981" strokeWidth="0.5" />
                   ))}
                 </svg>
               </div>

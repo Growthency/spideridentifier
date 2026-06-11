@@ -19,8 +19,8 @@ export function SpeciesArt({
       className={cn(
         "relative overflow-hidden",
         accent === "crimson"
-          ? "bg-[radial-gradient(120%_120%_at_20%_0%,rgba(226,62,87,0.32),transparent_55%),radial-gradient(120%_120%_at_100%_100%,rgba(245,165,36,0.18),transparent_60%)]"
-          : "bg-[radial-gradient(120%_120%_at_20%_0%,rgba(245,165,36,0.32),transparent_55%),radial-gradient(120%_120%_at_100%_100%,rgba(226,62,87,0.16),transparent_60%)]",
+          ? "bg-[radial-gradient(120%_120%_at_20%_0%,rgba(13,148,136,0.32),transparent_55%),radial-gradient(120%_120%_at_100%_100%,rgba(16,185,129,0.18),transparent_60%)]"
+          : "bg-[radial-gradient(120%_120%_at_20%_0%,rgba(16,185,129,0.32),transparent_55%),radial-gradient(120%_120%_at_100%_100%,rgba(13,148,136,0.16),transparent_60%)]",
         className
       )}
     >

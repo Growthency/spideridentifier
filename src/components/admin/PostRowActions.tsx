@@ -25,7 +25,7 @@ export function PostRowActions({ id, slug }: { id: string; slug: string }) {
       <Link href={`/admin/posts/${id}/edit`} className="grid h-8 w-8 place-items-center rounded-lg text-foreground/50 hover:bg-foreground/5 hover:text-gold" title="Edit">
         <Pencil className="h-4 w-4" />
       </Link>
-      <button onClick={remove} disabled={busy} className="grid h-8 w-8 place-items-center rounded-lg text-foreground/50 hover:bg-crimson/10 hover:text-[rgb(var(--crimson-soft))]" title="Delete">
+      <button onClick={remove} disabled={busy} className="grid h-8 w-8 place-items-center rounded-lg text-foreground/50 hover:bg-red-500/10 hover:text-[rgb(var(--crimson-soft))]" title="Delete">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
       </button>
     </div>

@@ -40,7 +40,7 @@ export function Limitations() {
                 A photo captures shape, colour and texture — but not everything. Knowing the limits is what makes
                 the tool trustworthy, especially when safety is on the line.
               </p>
-              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-crimson/25 bg-crimson/5 p-4 text-sm text-foreground/70">
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-500/25 bg-red-500/5 p-4 text-sm text-foreground/70">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--crimson-soft))]" />
                 <p>
                   For a suspected venomous bite, never rely on a photo. Seek professional or medical advice

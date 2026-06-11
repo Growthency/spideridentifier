@@ -16,14 +16,14 @@ export function SpiderMark({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="spiderGrad" x1="10" y1="4" x2="38" y2="44" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F8BC50" />
-          <stop offset="0.45" stopColor="#F5A524" />
-          <stop offset="1" stopColor="#E23E57" />
+          <stop stopColor="#34d399" />
+          <stop offset="0.45" stopColor="#10b981" />
+          <stop offset="1" stopColor="#0d9488" />
         </linearGradient>
         <radialGradient id="spiderBody" cx="0.4" cy="0.3" r="0.9">
-          <stop stopColor="#F8BC50" />
-          <stop offset="0.6" stopColor="#F5A524" />
-          <stop offset="1" stopColor="#E23E57" />
+          <stop stopColor="#34d399" />
+          <stop offset="0.6" stopColor="#10b981" />
+          <stop offset="1" stopColor="#0d9488" />
         </radialGradient>
       </defs>
 

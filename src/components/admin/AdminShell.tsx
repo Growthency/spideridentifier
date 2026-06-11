@@ -68,7 +68,7 @@ export function AdminShell({ email, children }: { email: string; children: React
         </Link>
         <button
           onClick={signOut}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-foreground/65 hover:bg-crimson/10 hover:text-[rgb(var(--crimson-soft))]"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-foreground/65 hover:bg-red-500/10 hover:text-[rgb(var(--crimson-soft))]"
         >
           <LogOut className="h-4.5 w-4.5" /> Sign out
         </button>

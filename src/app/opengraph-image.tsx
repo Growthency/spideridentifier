@@ -29,7 +29,7 @@ export default function OpengraphImage() {
             width: 420,
             height: 420,
             borderRadius: 9999,
-            background: "rgba(245,165,36,0.35)",
+            background: "rgba(16,185,129,0.35)",
             filter: "blur(120px)",
             display: "flex",
           }}
@@ -42,7 +42,7 @@ export default function OpengraphImage() {
             width: 460,
             height: 460,
             borderRadius: 9999,
-            background: "rgba(226,62,87,0.32)",
+            background: "rgba(13,148,136,0.32)",
             filter: "blur(130px)",
             display: "flex",
           }}
@@ -52,7 +52,7 @@ export default function OpengraphImage() {
           <div style={{ fontSize: 88, display: "flex" }}>🕷️</div>
           <div style={{ display: "flex", fontSize: 76, fontWeight: 800, letterSpacing: -2 }}>
             <span style={{ color: "#F5F3EE" }}>Spider</span>
-            <span style={{ color: "#F5A524" }}>Identifier</span>
+            <span style={{ color: "#10b981" }}>Identifier</span>
           </div>
         </div>
 
@@ -78,8 +78,8 @@ export default function OpengraphImage() {
                 display: "flex",
                 padding: "10px 22px",
                 borderRadius: 9999,
-                border: "1px solid rgba(245,165,36,0.4)",
-                color: "#FAD389",
+                border: "1px solid rgba(16,185,129,0.4)",
+                color: "#6ee7b7",
                 fontSize: 24,
               }}
             >

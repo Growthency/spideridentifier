@@ -13,7 +13,7 @@ const map: Record<
   },
   mild: {
     label: "Mild",
-    className: "bg-gold/12 text-[rgb(var(--gold-soft))] ring-gold/30",
+    className: "bg-amber-500/12 text-amber-700 dark:text-amber-300 ring-amber-400/25",
     Icon: Shield,
   },
   caution: {
@@ -23,7 +23,7 @@ const map: Record<
   },
   dangerous: {
     label: "Dangerous",
-    className: "bg-crimson/15 text-[rgb(var(--crimson-soft))] ring-crimson/35",
+    className: "bg-red-500/15 text-red-600 dark:text-red-300 ring-red-400/30",
     Icon: ShieldX,
   },
 };

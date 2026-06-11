@@ -15,14 +15,14 @@ export function AnatomySpider({ active, className }: { active: SpiderPart; class
     <svg viewBox="0 0 400 400" className={cn("h-full w-full", className)} fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="anat-grad" x1="120" y1="80" x2="300" y2="340" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F8BC50" />
-          <stop offset="0.5" stopColor="#F5A524" />
-          <stop offset="1" stopColor="#E23E57" />
+          <stop stopColor="#34d399" />
+          <stop offset="0.5" stopColor="#10b981" />
+          <stop offset="1" stopColor="#0d9488" />
         </linearGradient>
         <radialGradient id="anat-body" cx="0.4" cy="0.3" r="0.9">
-          <stop stopColor="#F8BC50" />
-          <stop offset="0.6" stopColor="#F5A524" />
-          <stop offset="1" stopColor="#E23E57" />
+          <stop stopColor="#34d399" />
+          <stop offset="0.6" stopColor="#10b981" />
+          <stop offset="1" stopColor="#0d9488" />
         </radialGradient>
         <filter id="anat-glow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="7" result="b" />
@@ -108,8 +108,8 @@ export function AnatomySpider({ active, className }: { active: SpiderPart; class
         ))}
         {on("eyes") && (
           <>
-            <circle cx="186" cy="150" r="2" fill="#F8BC50" />
-            <circle cx="214" cy="150" r="2" fill="#F8BC50" />
+            <circle cx="186" cy="150" r="2" fill="#34d399" />
+            <circle cx="214" cy="150" r="2" fill="#34d399" />
           </>
         )}
       </g>

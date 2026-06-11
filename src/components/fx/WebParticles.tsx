@@ -29,7 +29,7 @@ export function WebParticles() {
     // Read the themed colour (space-separated "r g b") → "r,g,b" for rgba().
     const readColor = () => {
       const v = getComputedStyle(document.documentElement).getPropertyValue("--particle").trim();
-      return (v || "245 165 36").split(/\s+/).join(",");
+      return (v || "16 185 129").split(/\s+/).join(",");
     };
     let rgb = readColor();
 

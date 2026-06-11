@@ -2,8 +2,8 @@ import type { Config } from "tailwindcss";
 
 /**
  * Brand system is logo-driven: a warm-obsidian canvas lit by a
- * Gold (#F5A524) → Crimson (#E23E57) gradient — golden orb-weaver silk
- * meeting black-widow red. Every accent, button and glow derives from these.
+ * Emerald (#10b981) → Teal (#0d9488) green gradient — fresh, nature/web
+ * themed. Every accent, button and glow derives from these.
  */
 const config: Config = {
   darkMode: "class",
@@ -30,24 +30,24 @@ const config: Config = {
           600: "#2A2530",
         },
         gold: {
-          DEFAULT: "#F5A524",
-          50: "#FEF6E7",
-          100: "#FDE9C2",
-          200: "#FAD389",
-          300: "#F8BC50",
-          400: "#F5A524",
-          500: "#E0900F",
-          600: "#B6710A",
+          DEFAULT: "#10b981",
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#6ee7b7",
+          300: "#34d399",
+          400: "#10b981",
+          500: "#059669",
+          600: "#047857",
         },
         crimson: {
-          DEFAULT: "#E23E57",
-          50: "#FDECEF",
-          100: "#FAD0D8",
-          200: "#F2A0B0",
-          300: "#EB6F86",
-          400: "#E23E57",
-          500: "#C82742",
-          600: "#A21C33",
+          DEFAULT: "#0d9488",
+          50: "#f0fdfa",
+          100: "#ccfbf1",
+          200: "#99f6e4",
+          300: "#5eead4",
+          400: "#0d9488",
+          500: "#0d9488",
+          600: "#0f766e",
         },
       },
       fontFamily: {
@@ -63,15 +63,15 @@ const config: Config = {
         "5xl": "2.5rem",
       },
       boxShadow: {
-        glow: "0 0 60px -12px rgba(245,165,36,0.45)",
-        "glow-crimson": "0 0 60px -12px rgba(226,62,87,0.45)",
+        glow: "0 0 60px -12px rgba(16,185,129,0.45)",
+        "glow-crimson": "0 0 60px -12px rgba(13,148,136,0.45)",
         card: "var(--shadow-card)",
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(120deg, #F5A524 0%, #F0734A 45%, #E23E57 100%)",
-        "brand-radial": "radial-gradient(circle at 50% 0%, rgba(245,165,36,0.18), transparent 60%)",
+        "brand-gradient": "linear-gradient(120deg, #10b981 0%, #22c55e 45%, #0d9488 100%)",
+        "brand-radial": "radial-gradient(circle at 50% 0%, rgba(16,185,129,0.18), transparent 60%)",
         "web-grid":
-          "linear-gradient(to right, rgba(245,165,36,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(245,165,36,0.06) 1px, transparent 1px)",
+          "linear-gradient(to right, rgba(16,185,129,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(16,185,129,0.06) 1px, transparent 1px)",
       },
       keyframes: {
         shimmer: {

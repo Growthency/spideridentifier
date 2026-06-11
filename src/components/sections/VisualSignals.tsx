@@ -75,7 +75,7 @@ export function VisualSignals() {
           {/* illustration */}
           <div className="order-1 lg:order-2">
             <div className="gradient-border relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-4xl bg-card/60 p-6">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(245,165,36,0.12),transparent_60%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.12),transparent_60%)]" />
               <AnatomySpider active={part} />
               <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full glass px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--gold-soft))]">
                 {visualSignals[active].label}

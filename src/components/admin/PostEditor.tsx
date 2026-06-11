@@ -109,7 +109,7 @@ export function PostEditor({ post }: { post?: BlogPost }) {
         </button>
       </div>
 
-      {error && <p className="mt-4 rounded-xl border border-crimson/30 bg-crimson/10 p-3 text-sm text-[rgb(var(--crimson-soft))]">{error}</p>}
+      {error && <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-[rgb(var(--crimson-soft))]">{error}</p>}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* main */}
@@ -196,7 +196,7 @@ export function PostEditor({ post }: { post?: BlogPost }) {
               </select>
             </div>
             <label className="flex items-center gap-2 text-sm text-foreground/75">
-              <input type="checkbox" checked={!!form.is_featured} onChange={(e) => set("is_featured", e.target.checked)} className="h-4 w-4 accent-[#F5A524]" />
+              <input type="checkbox" checked={!!form.is_featured} onChange={(e) => set("is_featured", e.target.checked)} className="h-4 w-4 accent-[#10b981]" />
               Feature on homepage
             </label>
           </div>

@@ -24,9 +24,9 @@ export function WaveDivider({ className, flip = false }: { className?: string; f
         />
         <defs>
           <linearGradient id="wave-grad" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F5A524" stopOpacity="0" />
-            <stop offset="0.5" stopColor="#F5A524" />
-            <stop offset="1" stopColor="#E23E57" stopOpacity="0" />
+            <stop stopColor="#10b981" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#10b981" />
+            <stop offset="1" stopColor="#0d9488" stopOpacity="0" />
           </linearGradient>
         </defs>
       </svg>

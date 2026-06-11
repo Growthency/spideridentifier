@@ -17,8 +17,8 @@ export function BackdropGlobs() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {/* base vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,rgba(245,165,36,0.10),transparent_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(100%_60%_at_100%_100%,rgba(226,62,87,0.08),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,rgba(16,185,129,0.10),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(100%_60%_at_100%_100%,rgba(13,148,136,0.08),transparent_60%)]" />
 
       {/* drifting globs — outer = scroll parallax, inner = continuous drift */}
       <motion.div style={{ y: y1 }} className="absolute -left-32 top-[4%]">
