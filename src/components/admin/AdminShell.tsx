@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, FileText, Inbox, ExternalLink, LogOut, Menu, X, PlusCircle } from "lucide-react";
+import { LayoutDashboard, FileText, Inbox, Users, CreditCard, ExternalLink, LogOut, Menu, X, PlusCircle } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 const nav = [
   { title: "Overview", href: "/admin", icon: LayoutDashboard },
   { title: "Blog posts", href: "/admin/posts", icon: FileText },
+  { title: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
+  { title: "Users", href: "/admin/users", icon: Users },
   { title: "Messages", href: "/admin/messages", icon: Inbox },
 ];
 

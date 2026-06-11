@@ -49,6 +49,12 @@ export const privacyDoc: LegalDoc = {
       ],
     },
     {
+      h: "Payments",
+      p: [
+        "Payments are processed by Paddle.com, our authorised reseller and Merchant of Record. When you subscribe, your payment details are collected and handled securely by Paddle under its own privacy policy — we never see or store your full card details.",
+      ],
+    },
+    {
       h: "Your rights",
       p: [
         "Depending on your location, you may have the right to access, correct, or delete your personal information, and to object to certain processing. Contact us to exercise these rights.",
@@ -86,6 +92,13 @@ export const termsDoc: LegalDoc = {
       h: "No medical or professional advice",
       p: [
         "Content on this site is for general information only and is not medical, veterinary, or professional advice. For a suspected bite or any health concern, seek qualified medical care.",
+      ],
+    },
+    {
+      h: "Subscriptions, billing & refunds",
+      p: [
+        "Paid plans are billed monthly and renew automatically until you cancel. Our order process is conducted by our reseller Paddle.com, the Merchant of Record, which handles payment, taxes and billing support.",
+        "Paid plans include a 7-day free trial and a 14-day money-back guarantee. You can cancel anytime and keep access until the end of your billing period. Full details are in our Refund & Cancellation Policy.",
       ],
     },
     {
@@ -139,6 +152,52 @@ export const disclaimerDoc: LegalDoc = {
       p: [
         "All species information and guides are provided for general education. They are not a substitute for advice from a qualified medical professional, pest-control specialist, or arachnologist.",
       ],
+    },
+  ],
+};
+
+export const refundDoc: LegalDoc = {
+  title: "Refund & Cancellation Policy",
+  eyebrow: "Legal",
+  updated: "June 2026",
+  intro:
+    "We want you to be happy with Spider Identifier. This policy explains your free trial, our money-back guarantee, and how to cancel. Payments are processed by Paddle, our authorised reseller and Merchant of Record.",
+  sections: [
+    {
+      h: "7-day free trial",
+      p: [
+        "Paid plans start with a 7-day free trial. You will not be charged during the trial, and you can cancel any time before it ends to avoid being billed.",
+      ],
+    },
+    {
+      h: "14-day money-back guarantee",
+      p: [
+        "If you are charged and are not satisfied, contact us within 14 days of the charge for a full refund — no questions asked.",
+        "To request a refund, email us with the email address on your account and the date of the charge. We process approved refunds promptly to your original payment method.",
+      ],
+    },
+    {
+      h: "Cancelling your subscription",
+      p: [
+        "You can cancel at any time from your dashboard or by contacting us. When you cancel, you keep access and any remaining credits until the end of your current billing period; you are not charged again after that.",
+        "Subscriptions renew automatically each month until cancelled.",
+      ],
+    },
+    {
+      h: "Credits",
+      p: [
+        "Monthly credits refresh at the start of each billing period and do not roll over. Credits have no cash value and are non-transferable. If an identification fails to return a confident result, the credits for that scan are automatically refunded to your balance.",
+      ],
+    },
+    {
+      h: "Payments & Merchant of Record",
+      p: [
+        "Our order process is conducted by our online reseller Paddle.com, which is the Merchant of Record for all our orders. Paddle handles all payments, billing enquiries, taxes and refunds on our behalf.",
+      ],
+    },
+    {
+      h: "Contact",
+      p: ["For any billing question, refund or cancellation, email us using the address on our contact page and we'll help right away."],
     },
   ],
 };
