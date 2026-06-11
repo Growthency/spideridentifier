@@ -8,6 +8,7 @@ import { Menu, X, ScanSearch } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { mainNav } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -81,6 +82,7 @@ export function Navbar() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              <UserMenu />
               <Button href="/#identify" size="sm" className="hidden sm:inline-flex">
                 <ScanSearch className="h-4 w-4" />
                 Identify Free
@@ -130,6 +132,20 @@ export function Navbar() {
                   </motion.li>
                 ))}
               </ul>
+              <div className="mt-1 flex gap-2 border-t border-foreground/8 px-2 pt-3">
+                <Link
+                  href="/login"
+                  className="flex h-11 flex-1 items-center justify-center rounded-2xl border border-foreground/12 text-sm font-medium text-foreground/80"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="flex h-11 flex-1 items-center justify-center rounded-2xl border border-foreground/12 text-sm font-medium text-foreground/80"
+                >
+                  Dashboard
+                </Link>
+              </div>
               <div className="p-2 pt-3">
                 <Button href="/#identify" size="lg" className="w-full">
                   <ScanSearch className="h-5 w-5" />
