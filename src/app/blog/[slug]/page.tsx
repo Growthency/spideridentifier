@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Calendar, ScanSearch } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { Markdown } from "@/components/blog/Markdown";
+import { SaveArticleButton } from "@/components/blog/SaveArticleButton";
 import { BlogMedia } from "@/components/ui/BlogMedia";
 import { BlogCard } from "@/components/ui/BlogCard";
 import { blogPhotoCredits } from "@/content/blogPhotoCredits";
@@ -117,12 +118,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       <article className="relative pb-12">
         <div className="container-px">
-          <Link
-            href="/blog"
-            className="mb-8 inline-flex items-center gap-2 text-sm text-foreground/55 transition-colors hover:text-gold"
-          >
-            <ArrowLeft className="h-4 w-4" /> All articles
-          </Link>
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 text-sm text-foreground/55 transition-colors hover:text-gold"
+            >
+              <ArrowLeft className="h-4 w-4" /> All articles
+            </Link>
+            <SaveArticleButton slug={post.slug} />
+          </div>
 
           {/* cover */}
           <div className="gradient-border mb-2 overflow-hidden rounded-4xl p-1.5">
