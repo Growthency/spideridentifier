@@ -119,8 +119,10 @@ alter table public.favorites enable row level security;
 
 drop policy if exists "own profile read" on public.profiles;
 create policy "own profile read" on public.profiles for select using (auth.uid() = id);
+-- No client-side update policy on purpose: profile writes (name, avatar)
+-- go through server routes with an allow-list, so credits/plan/subscription
+-- can never be edited from the browser.
 drop policy if exists "own profile update" on public.profiles;
-create policy "own profile update" on public.profiles for update using (auth.uid() = id);
 
 drop policy if exists "own analyses" on public.analyses;
 create policy "own analyses" on public.analyses for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

@@ -1,31 +1,22 @@
 import { getProfile } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
-import { siteConfig } from "@/lib/site";
-import { ReferralBox } from "@/components/dashboard/ReferralBox";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ReferralClient } from "@/components/dashboard/ReferralClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReferralPage() {
   const profile = await getProfile();
-  const supabase = await createClient();
+  // Count referred signups with the admin client — RLS hides other profiles
+  // from the user's own session, so this must happen server-side.
   let count = 0;
-  if (supabase && profile) {
-    const { count: c } = await supabase
+  const admin = createAdminClient();
+  if (admin && profile) {
+    const { count: c } = await admin
       .from("profiles")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("referred_by", profile.id);
     count = c ?? 0;
   }
-  const code = profile?.referral_code ?? "";
-  const link = `${siteConfig.url}/signup?ref=${code}`;
 
-  return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="font-display text-2xl font-bold">Refer &amp; earn</h1>
-      <p className="mt-1 text-sm text-foreground/55">
-        Invite a friend — you both get 20 bonus credits when they sign up.
-      </p>
-      <ReferralBox code={code} link={link} count={count} />
-    </div>
-  );
+  return <ReferralClient code={profile?.referral_code ?? ""} count={count} />;
 }
