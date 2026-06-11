@@ -1,81 +1,114 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Tag, BarChart3, Globe } from "lucide-react";
 import { BlogCard } from "@/components/ui/BlogCard";
+import { FilterDropdown } from "@/components/blog/FilterDropdown";
+import { Pagination } from "@/components/blog/Pagination";
 import type { BlogPost } from "@/lib/types";
-import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 6;
 
 export function BlogExplorer({ posts }: { posts: BlogPost[] }) {
   const categories = useMemo(
-    () => ["All", ...Array.from(new Set(posts.map((p) => p.category)))],
+    () => ["All categories", ...Array.from(new Set(posts.map((p) => p.category)))],
     [posts]
   );
-  const [cat, setCat] = useState("All");
-  const [query, setQuery] = useState("");
+  const levels = useMemo(
+    () => ["All levels", ...Array.from(new Set(posts.map((p) => p.level)))],
+    [posts]
+  );
+  const regions = useMemo(
+    () => ["All regions", ...Array.from(new Set(posts.map((p) => p.region)))],
+    [posts]
+  );
 
-  const filtered = posts.filter((p) => {
-    const matchesCat = cat === "All" || p.category === cat;
+  const [draft, setDraft] = useState("");
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState(categories[0]);
+  const [level, setLevel] = useState(levels[0]);
+  const [region, setRegion] = useState(regions[0]);
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    const matchesQuery =
-      !q ||
-      p.title.toLowerCase().includes(q) ||
-      p.excerpt.toLowerCase().includes(q) ||
-      p.tags.some((t) => t.toLowerCase().includes(q));
-    return matchesCat && matchesQuery;
-  });
+    return posts.filter((p) => {
+      const okCat = category === categories[0] || p.category === category;
+      const okLvl = level === levels[0] || p.level === level;
+      const okReg = region === regions[0] || p.region === region;
+      const okQ =
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.excerpt.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q));
+      return okCat && okLvl && okReg && okQ;
+    });
+  }, [posts, query, category, level, region, categories, levels, regions]);
+
+  // reset to first page whenever the result set changes
+  useEffect(() => setPage(1), [query, category, level, region]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div>
-      <div className="mb-10 flex flex-col gap-5">
-        <div className="relative mx-auto w-full max-w-md">
+      {/* filter bar */}
+      <div className="flex flex-col gap-3 rounded-3xl border border-foreground/10 bg-card/50 p-3 lg:flex-row lg:items-center">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setQuery(draft);
+          }}
+          className="relative flex-1"
+        >
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
             placeholder="Search guides — black widow, web, bite…"
-            className="h-12 w-full rounded-full border border-foreground/10 bg-foreground/5 pl-11 pr-4 text-sm text-foreground placeholder:text-foreground/40 focus:border-gold/50 focus:outline-none"
+            className="h-11 w-full rounded-full border border-foreground/10 bg-foreground/5 pl-11 pr-4 text-sm text-foreground placeholder:text-foreground/40 focus:border-gold/50 focus:outline-none"
           />
-        </div>
+        </form>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {categories.map((c) => {
-            const active = cat === c;
-            return (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className={cn(
-                  "relative rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                  active ? "text-ink-950" : "text-foreground/60 hover:text-foreground"
-                )}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="blog-filter"
-                    className="absolute inset-0 -z-10 rounded-full bg-brand-gradient"
-                    transition={{ type: "spring", stiffness: 360, damping: 30 }}
-                  />
-                )}
-                {c}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterDropdown icon={Tag} value={category} options={categories} onChange={setCategory} />
+          <FilterDropdown icon={BarChart3} value={level} options={levels} onChange={setLevel} />
+          <FilterDropdown icon={Globe} value={region} options={regions} onChange={setRegion} />
+          <button
+            type="button"
+            onClick={() => setQuery(draft)}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950 transition-transform hover:-translate-y-0.5"
+          >
+            <Search className="h-4 w-4" /> Search
+          </button>
         </div>
       </div>
 
+      {/* count */}
+      <p className="mt-6 text-sm text-foreground/55">
+        Showing <span className="font-semibold text-foreground">{current.length}</span> of{" "}
+        <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
+        {filtered.length === 1 ? "article" : "articles"}
+      </p>
+
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-foreground/50">No guides match your search yet.</p>
+        <p className="py-20 text-center text-foreground/50">No guides match your filters yet.</p>
       ) : (
-        <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
+        <motion.div layout className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {current.map((p) => (
             <motion.div key={p.slug} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <BlogCard post={p} />
             </motion.div>
           ))}
         </motion.div>
       )}
+
+      <Pagination page={page} pageCount={pageCount} onChange={(p) => {
+        setPage(p);
+        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      }} />
     </div>
   );
 }
