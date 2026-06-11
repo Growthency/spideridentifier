@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Instagram, Twitter, Facebook, Youtube, Linkedin, Mail, AlertTriangle } from "lucide-react";
+import { Instagram, Twitter, Facebook, Youtube, Linkedin, Mail, AlertTriangle, Lock } from "lucide-react";
+import { PaymentBadges } from "@/components/layout/PaymentBadges";
 import { Logo } from "@/components/brand/Logo";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { siteConfig, footerNav } from "@/lib/site";
@@ -78,7 +79,18 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/45 sm:flex-row">
+        {/* payments & trust */}
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-foreground/50">We accept</span>
+            <PaymentBadges />
+          </div>
+          <p className="flex items-center gap-2 text-xs text-foreground/50">
+            <Lock className="h-3.5 w-3.5 text-gold" /> Secured by Paddle · 256-bit SSL encryption
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/45 sm:flex-row">
           <p>
             © {year} {siteConfig.name}. All rights reserved.
           </p>
@@ -88,6 +100,9 @@ export function Footer() {
             </Link>
             <Link href="/terms" className="hover:text-foreground/70">
               Terms
+            </Link>
+            <Link href="/refund" className="hover:text-foreground/70">
+              Refund
             </Link>
             <Link href="/disclaimer" className="hover:text-foreground/70">
               Disclaimer

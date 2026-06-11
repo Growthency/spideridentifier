@@ -59,6 +59,7 @@ export const footerNav = {
       { title: "Contact", href: "/contact" },
       { title: "Privacy Policy", href: "/privacy" },
       { title: "Terms of Service", href: "/terms" },
+      { title: "Refund Policy", href: "/refund" },
       { title: "Safety Disclaimer", href: "/disclaimer" },
     ],
   },

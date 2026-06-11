@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Check, Sparkles, ShieldCheck } from "lucide-react";
+import { PlanButton } from "@/components/pricing/PlanButton";
 import { Reveal } from "@/components/fx/Reveal";
 import { pricingTiers } from "@/content/pricing";
 import { cn } from "@/lib/utils";
@@ -45,17 +45,9 @@ export function PricingTable() {
               </p>
             </div>
 
-            <Link
-              href={tier.cta.href}
-              className={cn(
-                "mt-6 inline-flex h-12 items-center justify-center rounded-full text-sm font-semibold transition-transform hover:-translate-y-0.5",
-                tier.highlighted
-                  ? "bg-brand-gradient text-ink-950"
-                  : "border border-gold/40 text-foreground hover:bg-gold/10"
-              )}
-            >
-              {tier.cta.label}
-            </Link>
+            <div className="mt-6">
+              <PlanButton tier={tier.name} highlighted={tier.highlighted} label={tier.cta.label} />
+            </div>
 
             <ul className="mt-7 space-y-3">
               {tier.features.map((f) => (
