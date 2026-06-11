@@ -10,6 +10,7 @@
     "lint": "next lint",
     "convert:webp": "node scripts/convert-to-webp.mjs",
     "fetch:images": "node --experimental-strip-types scripts/fetch-images.mjs",
+    "fetch:blog-images": "node scripts/fetch-blog-images.mjs",
     "seed": "node --experimental-strip-types --env-file=.env.local scripts/seed.mjs"
   },
   "dependencies": {

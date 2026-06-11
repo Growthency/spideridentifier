@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Calendar, ScanSearch } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { Markdown } from "@/components/blog/Markdown";
-import { SpeciesArt } from "@/components/ui/SpeciesArt";
+import { BlogMedia } from "@/components/ui/BlogMedia";
 import { BlogCard } from "@/components/ui/BlogCard";
+import { blogPhotoCredits } from "@/content/blogPhotoCredits";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/fx/Reveal";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -90,9 +91,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Link>
 
           {/* cover */}
-          <div className="gradient-border mb-10 overflow-hidden rounded-4xl p-1.5">
-            <SpeciesArt accent={accent} className="h-56 w-full rounded-[1.85rem] sm:h-72" markClassName="h-24 w-24" />
+          <div className="gradient-border mb-2 overflow-hidden rounded-4xl p-1.5">
+            <BlogMedia slug={post.slug} accent={accent} alt={post.title} className="h-56 w-full rounded-[1.85rem] sm:h-80" />
           </div>
+          {blogPhotoCredits[post.slug] && (
+            <p className="mb-10 text-center text-[11px] text-foreground/40">
+              Cover photo:{" "}
+              <a href={blogPhotoCredits[post.slug].source} target="_blank" rel="noopener noreferrer" className="hover:text-gold">
+                {blogPhotoCredits[post.slug].artist}
+              </a>{" "}
+              · {blogPhotoCredits[post.slug].license} · Wikimedia Commons
+            </p>
+          )}
 
           <div className="mx-auto max-w-3xl">
             <Markdown content={post.content} />

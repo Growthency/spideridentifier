@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Clock, Calendar } from "lucide-react";
-import { SpeciesArt } from "@/components/ui/SpeciesArt";
+import { BlogMedia } from "@/components/ui/BlogMedia";
 import type { BlogPost } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ export function BlogCard({ post, featured = false }: { post: BlogPost; featured?
       )}
     >
       <div className={cn("relative", featured ? "h-52 md:h-auto md:w-2/5" : "h-44")}>
-        <SpeciesArt accent={accent} className="h-full min-h-44 w-full transition-transform duration-700 group-hover:scale-105" />
+        <BlogMedia slug={post.slug} accent={accent} alt={post.title} className="h-full min-h-44 w-full transition-transform duration-700 group-hover:scale-105" />
         <span className="absolute left-3 top-3 rounded-full bg-background/70 px-3 py-1 text-xs font-semibold text-[rgb(var(--gold-soft))] backdrop-blur">
           {post.category}
         </span>
