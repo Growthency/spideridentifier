@@ -2,10 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { ScrollProgress } from "@/components/layout/ScrollProgress";
-import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { BackdropGlobs } from "@/components/fx/BackdropGlobs";
 import { WebParticles } from "@/components/fx/WebParticles";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -63,15 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${sora.variable}`} suppressHydrationWarning>
       <body className="grain relative min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider>
-          <ScrollProgress />
           <BackdropGlobs />
           <WebParticles />
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <ScrollToTop />
+          <SiteChrome>{children}</SiteChrome>
         </ThemeProvider>
       </body>
     </html>
