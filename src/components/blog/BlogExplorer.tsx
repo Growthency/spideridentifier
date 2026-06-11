@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Search, Tag, BarChart3, Globe, Star } from "lucide-react";
 import { BlogCard } from "@/components/ui/BlogCard";
 import { FilterDropdown } from "@/components/blog/FilterDropdown";
@@ -108,23 +108,23 @@ export function BlogExplorer({ posts }: { posts: BlogPost[] }) {
         <div className="mt-6 space-y-8">
           {/* featured (top-ranked) */}
           {featured && (
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+            <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--gold-soft))]">
                 <Star className="h-3.5 w-3.5 fill-gold text-gold" /> Featured guide
               </div>
               <BlogCard post={featured} featured />
-            </motion.div>
+            </m.div>
           )}
 
           {/* grid */}
           {grid.length > 0 && (
-            <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <m.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {grid.map((p) => (
-                <motion.div key={p.slug} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <m.div key={p.slug} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <BlogCard post={p} />
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </div>
       )}

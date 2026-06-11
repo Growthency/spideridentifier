@@ -16,9 +16,25 @@ export const organizationSchema = {
   "@type": "Organization",
   name: siteConfig.name,
   url: siteConfig.url,
+  logo: `${siteConfig.url}/icon.svg`,
   description: siteConfig.description,
   email: siteConfig.email,
+  sameAs: siteConfig.social.map((s) => s.href),
 };
+
+/** BreadcrumbList for non-homepage pages — items as {name, path}. */
+export function breadcrumbSchema(items: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [{ name: "Home", path: "/" }, ...items].map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: it.path === "/" ? siteConfig.url : `${siteConfig.url}${it.path}`,
+    })),
+  };
+}
 
 export const websiteSchema = {
   "@context": "https://schema.org",

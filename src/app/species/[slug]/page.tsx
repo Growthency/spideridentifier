@@ -9,10 +9,14 @@ import { VenomBadge } from "@/components/ui/VenomBadge";
 import { SpeciesCard } from "@/components/ui/SpeciesCard";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/fx/Reveal";
-import { JsonLd } from "@/components/seo/JsonLd";
+import { JsonLd, breadcrumbSchema } from "@/components/seo/JsonLd";
 import { getSpecies, getSpeciesBySlugData } from "@/lib/data";
 import { speciesLibrary } from "@/content/species";
 import { siteConfig } from "@/lib/site";
+
+// ISR — static speed with hourly refresh for admin-managed species.
+export const revalidate = 3600;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   return speciesLibrary.map((s) => ({ slug: s.slug }));
@@ -25,11 +29,31 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const species = await getSpeciesBySlugData(slug);
-  if (!species) return { title: "Species not found" };
+  if (!species) return { title: "Species not found", robots: { index: false } };
+  const title = `${species.common_name} (${species.scientific_name}) — Identification & Venom Risk`;
+  const url = `${siteConfig.url}/species/${species.slug}`;
+  // Branded 1200×630 JPEG with the species photo + venom chip.
+  const ogImage = `/og/species/${species.slug}`;
   return {
-    title: `${species.common_name} (${species.scientific_name}) — Identification & Venom Risk`,
+    title,
     description: species.summary,
     alternates: { canonical: `/species/${species.slug}` },
+    openGraph: {
+      type: "article",
+      siteName: siteConfig.name,
+      locale: "en_US",
+      url,
+      title,
+      description: species.summary,
+      section: species.family,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: species.common_name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: species.summary,
+      images: [ogImage],
+    },
   };
 }
 
@@ -61,8 +85,21 @@ export default async function SpeciesDetailPage({
           headline: `${species.common_name} identification`,
           description: species.summary,
           about: species.scientific_name,
-          publisher: { "@type": "Organization", name: siteConfig.name },
+          image: `${siteConfig.url}/og/species/${species.slug}`,
+          url: `${siteConfig.url}/species/${species.slug}`,
+          mainEntityOfPage: `${siteConfig.url}/species/${species.slug}`,
+          publisher: {
+            "@type": "Organization",
+            name: siteConfig.name,
+            logo: { "@type": "ImageObject", url: `${siteConfig.url}/icon.svg` },
+          },
         }}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Species", path: "/species" },
+          { name: species.common_name, path: `/species/${species.slug}` },
+        ])}
       />
 
       <PageHero

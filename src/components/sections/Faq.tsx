@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Plus } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { faqs } from "@/content/home";
@@ -49,7 +49,7 @@ export function Faq() {
                 </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -58,7 +58,7 @@ export function Faq() {
                       <p className="px-5 pb-5 text-sm leading-relaxed text-foreground/65 sm:text-base">
                         {item.a}
                       </p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>

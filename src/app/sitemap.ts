@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site";
-import { blogPosts } from "@/content/blog";
-import { speciesLibrary } from "@/content/species";
+import { getBlogPosts, getSpecies } from "@/lib/data";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteConfig.url;
   const staticRoutes = ["", "/species", "/anatomy", "/blog", "/pricing", "/about", "/contact", "/privacy", "/terms", "/refund", "/disclaimer"];
 
@@ -14,7 +15,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  for (const post of blogPosts) {
+  // Live content (Supabase when configured, bundled fallback otherwise) so
+  // admin-published posts are picked up without a redeploy.
+  const [posts, species] = await Promise.all([getBlogPosts(), getSpecies()]);
+
+  for (const post of posts) {
     routes.push({
       url: `${base}/blog/${post.slug}`,
       lastModified: new Date(post.published_at),
@@ -23,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  for (const s of speciesLibrary) {
+  for (const s of species) {
     routes.push({
       url: `${base}/species/${s.slug}`,
       lastModified: new Date(),

@@ -30,7 +30,7 @@ export function Footer() {
           {/* brand */}
           <div className="col-span-2 md:col-span-4">
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/55">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/70">
               AI-powered spider identification — instant species ID, venom-risk indicators and look-alike
               alerts you can trust.
             </p>
@@ -68,7 +68,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-foreground/55 transition-colors hover:text-gold"
+                      className="text-sm text-foreground/70 transition-colors hover:text-gold"
                     >
                       {link.title}
                     </Link>
@@ -82,15 +82,15 @@ export function Footer() {
         {/* payments & trust */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 sm:flex-row">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-foreground/50">We accept</span>
+            <span className="text-xs font-medium text-foreground/70">We accept</span>
             <PaymentBadges />
           </div>
-          <p className="flex items-center gap-2 text-xs text-foreground/50">
+          <p className="flex items-center gap-2 text-xs text-foreground/70">
             <Lock className="h-3.5 w-3.5 text-gold" /> Secured by Paddle · 256-bit SSL encryption
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/45 sm:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/65 sm:flex-row">
           <p>
             © {year} {siteConfig.name}. All rights reserved.
           </p>
@@ -111,7 +111,7 @@ export function Footer() {
         </div>
 
         {/* safety note — at the very bottom of the footer */}
-        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-foreground/60">
+        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-foreground/75">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--crimson-soft))]" />
           <p>
             <strong className="text-foreground/80">Safety note:</strong> Spider Identifier provides the closest

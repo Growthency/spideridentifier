@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Check, ScanSearch, Lock } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
@@ -16,12 +17,12 @@ import {
   freeTier,
 } from "@/content/pricing";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Pricing — 7 Days Free, Then 50% Off Your First Month",
   description:
     "Try every spider-identification feature free for 7 days, then save 50% on your first month. Monthly plans, fresh credits, 14-day money-back guarantee, cancel anytime.",
-  alternates: { canonical: "/pricing" },
-};
+  path: "/pricing",
+});
 
 export default function PricingPage() {
   return (
