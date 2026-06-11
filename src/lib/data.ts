@@ -1,4 +1,4 @@
-import { createClient, supabaseConfigured } from "@/lib/supabase/server";
+import { createPublicClient, publicConfigured } from "@/lib/supabase/public";
 import { blogPosts as fallbackPosts } from "@/content/blog";
 import { speciesLibrary as fallbackSpecies } from "@/content/species";
 import type { BlogPost, Species } from "@/lib/types";
@@ -7,12 +7,15 @@ import type { BlogPost, Species } from "@/lib/types";
  * Data layer. Reads from Supabase when configured, otherwise transparently
  * falls back to the bundled content so the site is fully functional on first
  * run — before any keys are added.
+ *
+ * Uses the cookie-less public client so blog/species pages can be statically
+ * generated (ISR) — never per-request rendered just for public content.
  */
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  if (supabaseConfigured) {
+  if (publicConfigured) {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase!
         .from("blog_posts")
         .select("*")
@@ -29,9 +32,9 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  if (supabaseConfigured) {
+  if (publicConfigured) {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase!
         .from("blog_posts")
         .select("*")
@@ -58,9 +61,9 @@ export async function getRelatedPosts(slug: string, limit = 3): Promise<BlogPost
 }
 
 export async function getSpecies(): Promise<Species[]> {
-  if (supabaseConfigured) {
+  if (publicConfigured) {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase!
         .from("species")
         .select("*")

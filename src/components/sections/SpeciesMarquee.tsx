@@ -22,7 +22,7 @@ export function SpeciesMarquee() {
   const list = speciesLibrary;
   return (
     <section className="relative border-y border-foreground/8 py-8" aria-label="Species the tool can identify">
-      <p className="container-px mb-5 text-center text-xs font-semibold uppercase tracking-[0.2em] text-foreground/40">
+      <p className="container-px mb-5 text-center text-xs font-semibold uppercase tracking-[0.2em] text-foreground/70">
         Trained across common &amp; medically significant species worldwide
       </p>
       <div className="flex flex-col gap-3">

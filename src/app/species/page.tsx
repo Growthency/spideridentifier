@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { SpeciesExplorer } from "@/components/species/SpeciesExplorer";
 import { getSpecies } from "@/lib/data";
 
-export const metadata: Metadata = {
+export const revalidate = 3600;
+
+export const metadata: Metadata = pageMetadata({
   title: "Spider Species Library — Identification, Venom Risk & Habitat",
   description:
     "Browse common and medically significant spider species with identification tips, venom-risk ratings, size and habitat — from house spiders to the black widow.",
-  alternates: { canonical: "/species" },
-};
+  path: "/species",
+});
 
 export default async function SpeciesPage() {
   const species = await getSpecies();

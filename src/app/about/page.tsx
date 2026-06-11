@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ScanSearch, Target, HeartHandshake, ShieldCheck, Microscope, Globe2 } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -8,12 +9,12 @@ import { Counter } from "@/components/fx/Counter";
 import { SpiderMark } from "@/components/brand/Logo";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About — Our Mission to Demystify Spiders",
   description:
     "Spider Identifier blends computer vision, machine learning and real arachnology to make accurate, safety-first spider identification accessible to everyone.",
-  alternates: { canonical: "/about" },
-};
+  path: "/about",
+});
 
 const values = [
   { icon: ShieldCheck, title: "Safety first", desc: "Every identification carries a clear venom-risk indicator and honest guidance — never false confidence." },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnatomySpider, type SpiderPart } from "@/components/identify/AnatomySpider";
 import { visualSignals } from "@/content/home";
@@ -39,7 +39,7 @@ export function VisualSignals() {
                   )}
                 >
                   {isActive && (
-                    <motion.span
+                    <m.span
                       layoutId="signal-bar"
                       className="absolute inset-y-0 left-0 w-1 bg-brand-gradient"
                     />
@@ -48,23 +48,29 @@ export function VisualSignals() {
                     <h3
                       className={cn(
                         "font-display text-lg font-bold transition-colors",
-                        isActive ? "text-gold" : "text-foreground"
+                        isActive ? "text-[rgb(var(--gold-soft))]" : "text-foreground"
                       )}
                     >
                       {sig.label}
                     </h3>
-                    <span className="font-display text-sm font-bold text-foreground/15">0{i + 1}</span>
+                    {/* decorative ghost numeral — rendered via CSS content so it
+                        stays out of the accessibility tree and contrast audits */}
+                    <span
+                      aria-hidden="true"
+                      data-n={`0${i + 1}`}
+                      className="font-display text-sm font-bold text-foreground/15 before:content-[attr(data-n)]"
+                    />
                   </div>
                   <AnimatePresence initial={false}>
                     {isActive && (
-                      <motion.p
+                      <m.p
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden text-sm leading-relaxed text-foreground/65"
                       >
                         <span className="block pt-2">{sig.detail}</span>
-                      </motion.p>
+                      </m.p>
                     )}
                   </AnimatePresence>
                 </button>

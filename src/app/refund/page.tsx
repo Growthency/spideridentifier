@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { LegalLayout } from "@/components/layout/LegalLayout";
 import { refundDoc } from "@/content/legal";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Refund & Cancellation Policy",
-  description: "Spider Identifier's free trial, 14-day money-back guarantee and cancellation policy. Payments handled by Paddle.",
-  alternates: { canonical: "/refund" },
-};
+  description:
+    "Spider Identifier's free trial, 14-day money-back guarantee and cancellation policy. Payments handled by Paddle.",
+  path: "/refund",
+});
 
 export default function RefundPage() {
   return <LegalLayout doc={refundDoc} />;

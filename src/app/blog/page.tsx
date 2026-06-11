@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHero } from "@/components/layout/PageHero";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
 import { getBlogPosts } from "@/lib/data";
 
-export const metadata: Metadata = {
+export const revalidate = 3600;
+
+export const metadata: Metadata = pageMetadata({
   title: "Spider Identification Blog — Guides, Species & Safety",
   description:
     "Expert spider identification guides, species spotlights, photography tips and bite-safety advice — crafted to help you identify spiders smarter and safer.",
-  alternates: { canonical: "/blog" },
-};
+  path: "/blog",
+});
 
 export default async function BlogPage() {
   const posts = await getBlogPosts();

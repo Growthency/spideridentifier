@@ -91,15 +91,35 @@ export function WebParticles() {
       raf = requestAnimationFrame(loop);
     };
 
-    resize();
-    if (reduce) step();
-    else loop();
+    // Pause the animation while the tab is hidden — saves CPU/battery and
+    // keeps the main thread free for whatever the user switched to.
+    const onVisibility = () => {
+      cancelAnimationFrame(raf);
+      if (!document.hidden && !reduce) loop();
+    };
+
+    // Defer the first frame to idle time so hydration and the LCP paint
+    // never compete with the canvas for the main thread. Safari has no
+    // requestIdleCallback — fall back to a short timeout there.
+    const start = () => {
+      resize();
+      if (reduce) step();
+      else loop();
+    };
+    const usedIdle = typeof window.requestIdleCallback === "function";
+    const idleId = usedIdle
+      ? window.requestIdleCallback(start, { timeout: 1200 })
+      : window.setTimeout(start, 350);
 
     window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
+      if (usedIdle) window.cancelIdleCallback(idleId);
+      else clearTimeout(idleId);
       themeObserver.disconnect();
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

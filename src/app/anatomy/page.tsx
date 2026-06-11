@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ScanSearch, CheckCircle2 } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { VisualSignals } from "@/components/sections/VisualSignals";
@@ -9,12 +10,12 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { anatomyParts, webTypes } from "@/content/anatomy";
 import { round } from "@/lib/utils";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Spider Anatomy Explained — Body, Legs, Eyes & Webs",
   description:
     "A clear guide to spider anatomy: the two body sections, eight legs, eye arrangements and web types — the features that make spider identification possible.",
-  alternates: { canonical: "/anatomy" },
-};
+  path: "/anatomy",
+});
 
 export default function AnatomyPage() {
   return (

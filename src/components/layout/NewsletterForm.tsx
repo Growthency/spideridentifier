@@ -40,6 +40,7 @@ export function NewsletterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@email.com"
+        aria-label="Email address"
         className="h-11 w-full rounded-full border border-foreground/10 bg-foreground/5 px-4 text-sm text-foreground placeholder:text-foreground/40 focus:border-gold/50 focus:outline-none"
       />
       <button

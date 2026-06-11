@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import {
   UploadCloud,
   ImageIcon,
@@ -138,7 +138,7 @@ export function IdentifyTool({ className }: { className?: string }) {
         <AnimatePresence mode="wait">
           {/* IDLE */}
           {stage === "idle" && (
-            <motion.div
+            <m.div
               key="idle"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -174,19 +174,19 @@ export function IdentifyTool({ className }: { className?: string }) {
                 <span className="rounded-full bg-foreground/5 px-2.5 py-1">🕷️ Side angle</span>
                 <span className="rounded-full bg-foreground/5 px-2.5 py-1">🔍 Fills the frame</span>
               </div>
-            </motion.div>
+            </m.div>
           )}
 
           {/* PREVIEW + ANALYZING */}
           {(stage === "preview" || stage === "analyzing") && preview && (
-            <motion.div key="preview" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+            <m.div key="preview" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
               <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={preview} alt="Spider to identify" className="h-64 w-full object-cover sm:h-80" />
                 {stage === "analyzing" && (
                   <>
                     <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
-                    <motion.div
+                    <m.div
                       initial={{ top: "0%" }}
                       animate={{ top: ["0%", "100%", "0%"] }}
                       transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
@@ -214,18 +214,18 @@ export function IdentifyTool({ className }: { className?: string }) {
               {stage === "analyzing" && (
                 <div className="mt-4 space-y-2">
                   {["Isolating the spider", "Measuring legs & body", "Matching against 50,000+ species"].map((step, i) => (
-                    <motion.div key={step} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.6 }} className="flex items-center gap-2 text-sm text-foreground/60">
+                    <m.div key={step} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.6 }} className="flex items-center gap-2 text-sm text-foreground/60">
                       <span className="h-1.5 w-1.5 rounded-full bg-gold" /> {step}
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )}
 
           {/* REAL RESULT */}
           {stage === "result" && result && (
-            <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <m.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   {preview && (
@@ -291,12 +291,12 @@ export function IdentifyTool({ className }: { className?: string }) {
                     ? `${meta.creditsLeft} credits left`
                     : ""}
               </p>
-            </motion.div>
+            </m.div>
           )}
 
           {/* DEMO RESULT (AI not configured) */}
           {stage === "demo" && matches.length > 0 && (
-            <motion.div key="demo" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <m.div key="demo" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   {preview && (
@@ -311,14 +311,14 @@ export function IdentifyTool({ className }: { className?: string }) {
                 <VenomBadge level={matches[0].species.venom_level} />
               </div>
               <div className="mt-4 space-y-3">
-                {matches.map((m, i) => (
-                  <div key={m.species.slug}>
+                {matches.map((match, i) => (
+                  <div key={match.species.slug}>
                     <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className={i === 0 ? "font-semibold text-foreground" : "text-foreground/60"}>{m.species.common_name}</span>
-                      <span className="tabular-nums text-foreground/60">{Math.round(m.confidence)}%</span>
+                      <span className={i === 0 ? "font-semibold text-foreground" : "text-foreground/60"}>{match.species.common_name}</span>
+                      <span className="tabular-nums text-foreground/60">{Math.round(match.confidence)}%</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-foreground/8">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${m.confidence}%` }} transition={{ duration: 0.9, delay: 0.15 + i * 0.12 }} className={cn("h-full rounded-full", i === 0 ? "bg-brand-gradient" : "bg-foreground/25")} />
+                      <m.div initial={{ width: 0 }} animate={{ width: `${match.confidence}%` }} transition={{ duration: 0.9, delay: 0.15 + i * 0.12 }} className={cn("h-full rounded-full", i === 0 ? "bg-brand-gradient" : "bg-foreground/25")} />
                     </div>
                   </div>
                 ))}
@@ -334,12 +334,12 @@ export function IdentifyTool({ className }: { className?: string }) {
               <p className="mt-3 flex items-center gap-1.5 text-[11px] text-foreground/40">
                 <ImageIcon className="h-3 w-3" /> Demo result — add your Anthropic API key for live AI predictions.
               </p>
-            </motion.div>
+            </m.div>
           )}
 
           {/* LIMIT (guest used up / out of credits) */}
           {stage === "limit" && (
-            <motion.div key="limit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center">
+            <m.div key="limit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center">
               {limit === "guest_limit" ? (
                 <>
                   <LogIn className="mx-auto h-10 w-10 text-gold" />
@@ -361,19 +361,19 @@ export function IdentifyTool({ className }: { className?: string }) {
                   </div>
                 </>
               )}
-            </motion.div>
+            </m.div>
           )}
 
           {/* ERROR */}
           {stage === "error" && (
-            <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center">
+            <m.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center">
               <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
               <h3 className="mt-3 font-display text-lg font-bold">Couldn&apos;t identify that</h3>
               <p className="mx-auto mt-1 max-w-xs text-sm text-foreground/60">{errorMsg}</p>
               <button onClick={reset} className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand-gradient px-6 text-sm font-semibold text-ink-950">
                 <RefreshCw className="h-4 w-4" /> Try again
               </button>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

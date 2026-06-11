@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { SpeciesCard } from "@/components/ui/SpeciesCard";
 import type { Species, VenomLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,7 @@ export function SpeciesExplorer({ species }: { species: Species[] }) {
               )}
             >
               {active && (
-                <motion.span
+                <m.span
                   layoutId="species-filter"
                   className="absolute inset-0 -z-10 rounded-full bg-brand-gradient"
                   transition={{ type: "spring", stiffness: 360, damping: 30 }}
@@ -50,13 +50,13 @@ export function SpeciesExplorer({ species }: { species: Species[] }) {
         })}
       </div>
 
-      <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <m.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {list.map((s) => (
-          <motion.div key={s.slug} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <m.div key={s.slug} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <SpeciesCard species={s} />
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

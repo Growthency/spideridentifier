@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { LazyMotion, domMax } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
@@ -19,18 +20,24 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const isApp = APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (isApp) {
-    return <div className="relative z-10 min-h-screen">{children}</div>;
+    return (
+      <div id="content" className="relative z-10 min-h-screen">
+        {children}
+      </div>
+    );
   }
 
   return (
-    <>
+    <LazyMotion features={domMax}>
       <ScrollProgress />
       <div className="relative z-10 flex min-h-screen flex-col">
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main id="content" className="flex-1">
+          {children}
+        </main>
         <Footer />
       </div>
       <ScrollToTop />
-    </>
+    </LazyMotion>
   );
 }

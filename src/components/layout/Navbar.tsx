@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Menu, X, ScanSearch } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
@@ -50,7 +50,7 @@ export function Navbar() {
               scrolled ? "glass-card shadow-card" : "border border-transparent"
             )}
           >
-            <Link href="/" aria-label="Spider Identifier home" className="shrink-0">
+            <Link href="/" className="shrink-0">
               <Logo />
             </Link>
 
@@ -68,7 +68,7 @@ export function Navbar() {
                     )}
                   >
                     {isActive(item.href) && (
-                      <motion.span
+                      <m.span
                         layoutId="nav-active"
                         className="absolute inset-0 -z-10 rounded-full bg-foreground/8 ring-1 ring-inset ring-foreground/10"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
@@ -102,7 +102,7 @@ export function Navbar() {
       {/* mobile menu */}
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -112,7 +112,7 @@ export function Navbar() {
             <div className="glass-card mt-2 rounded-3xl p-3 shadow-card">
               <ul className="flex flex-col">
                 {mainNav.map((item, i) => (
-                  <motion.li
+                  <m.li
                     key={item.href}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -129,7 +129,7 @@ export function Navbar() {
                     >
                       {item.title}
                     </Link>
-                  </motion.li>
+                  </m.li>
                 ))}
               </ul>
               <div className="mt-1 flex gap-2 border-t border-foreground/8 px-2 pt-3">
@@ -153,7 +153,7 @@ export function Navbar() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </header>

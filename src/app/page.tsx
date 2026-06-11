@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Hero } from "@/components/sections/Hero";
 import { IdentifySection } from "@/components/sections/IdentifySection";
 import { SpeciesMarquee } from "@/components/sections/SpeciesMarquee";
@@ -13,6 +14,14 @@ import { Faq } from "@/components/sections/Faq";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { WaveDivider } from "@/components/fx/WaveDivider";
 import { JsonLd, websiteSchema, organizationSchema, faqSchema } from "@/components/seo/JsonLd";
+
+// Static with hourly refresh — latest guides stay current without
+// per-request rendering.
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (
