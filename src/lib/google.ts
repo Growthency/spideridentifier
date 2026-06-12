@@ -13,7 +13,8 @@ import { createSign } from "node:crypto";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/analytics.readonly",
-  "https://www.googleapis.com/auth/webmasters.readonly",
+  "https://www.googleapis.com/auth/webmasters",
+  "https://www.googleapis.com/auth/indexing",
 ].join(" ");
 
 export const googleConfigured = Boolean(
@@ -199,6 +200,37 @@ export interface UrlInspection {
   coverageState: string;
   lastCrawlTime?: string;
   googleCanonical?: string;
+}
+
+/** Google Indexing API — ask Google to (re)crawl a URL. */
+export async function indexingPublish(url: string): Promise<{ ok: boolean; error?: string }> {
+  if (!googleConfigured) return { ok: false, error: "Google not configured" };
+  try {
+    await googleFetch("https://indexing.googleapis.com/v3/urlNotifications:publish", {
+      url,
+      type: "URL_UPDATED",
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
+}
+
+/** Submit a sitemap (or RSS feed) to Search Console. */
+export async function gscSubmitSitemap(feedUrl: string): Promise<{ ok: boolean; error?: string }> {
+  if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
+  try {
+    const token = await getAccessToken();
+    const site = encodeURIComponent(process.env.GSC_SITE_URL!);
+    const res = await fetch(
+      `https://www.googleapis.com/webmasters/v3/sites/${site}/sitemaps/${encodeURIComponent(feedUrl)}`,
+      { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) throw new Error(`Sitemap submit ${res.status}`);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
 }
 
 /** URL Inspection API — index status for a single URL. */
