@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { toWebp } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { uploadToBucket } from "@/lib/storageUpload";
 
 export const runtime = "nodejs";
 
@@ -27,11 +28,9 @@ export async function POST(req: Request) {
 
     const admin = createAdminClient()!;
     const path = `avatars/${user.id}/${randomUUID()}.webp`;
-    const { error } = await admin.storage.from("scans").upload(path, webp, { contentType: "image/webp", upsert: true });
-    if (error) throw error;
-    const { data } = admin.storage.from("scans").getPublicUrl(path);
-    await admin.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
-    return NextResponse.json({ url: data.publicUrl });
+    const url = await uploadToBucket(admin, "scans", path, webp, { contentType: "image/webp", upsert: true });
+    await admin.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+    return NextResponse.json({ url });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Upload failed" }, { status: 500 });
   }

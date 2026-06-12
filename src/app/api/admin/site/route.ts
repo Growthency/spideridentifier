@@ -92,6 +92,17 @@ export async function POST(req: Request) {
     revalidatePath("/", "layout");
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Save failed" }, { status: 500 });
+    // Supabase errors are plain objects, not Error instances — dig the
+    // message out either way so the admin sees the real reason.
+    const raw =
+      e instanceof Error
+        ? e.message
+        : typeof e === "object" && e && "message" in e
+          ? String((e as { message: unknown }).message)
+          : "Save failed";
+    const friendly = /schema cache|does not exist/i.test(raw)
+      ? "Database table missing — run supabase/admin-schema.sql in the Supabase SQL Editor once, then save again."
+      : raw;
+    return NextResponse.json({ error: friendly }, { status: 500 });
   }
 }
