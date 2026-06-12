@@ -23,6 +23,13 @@ export const googleConfigured = Boolean(
 export const ga4Configured = googleConfigured && Boolean(process.env.GA4_PROPERTY_ID);
 export const gscConfigured = googleConfigured && Boolean(process.env.GSC_SITE_URL);
 
+/** Property id exactly as Search Console expects (URL-prefix needs the trailing slash). */
+function gscSite(): string {
+  let s = (process.env.GSC_SITE_URL ?? "").trim();
+  if (/^https?:\/\//i.test(s) && !s.endsWith("/")) s += "/";
+  return s;
+}
+
 const b64url = (input: Buffer | string) =>
   Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
@@ -118,9 +125,12 @@ export interface AnalyticsSummary {
 const n = (row: Ga4Row | undefined, i = 0) => Number(row?.metricValues?.[i]?.value ?? 0);
 
 /** Everything the admin dashboard shows, in four GA4 calls. */
-export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary | null> {
+export async function getAnalyticsSummary(
+  startDate = "30daysAgo",
+  endDate = "today"
+): Promise<AnalyticsSummary | null> {
   if (!ga4Configured) return null;
-  const range = { startDate: `${days}daysAgo`, endDate: "today" };
+  const range = { startDate, endDate };
 
   const [totals, daily, pages, countries] = await Promise.all([
     // one row of headline metrics per range
@@ -187,7 +197,7 @@ export async function gscSearchAnalytics(body: {
   dimensionFilterGroups?: unknown[];
 }): Promise<GscRow[]> {
   if (!gscConfigured) return [];
-  const site = encodeURIComponent(process.env.GSC_SITE_URL!);
+  const site = encodeURIComponent(gscSite());
   const data = await googleFetch<{ rows?: GscRow[] }>(
     `https://www.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,
     body
@@ -221,7 +231,7 @@ export async function gscSubmitSitemap(feedUrl: string): Promise<{ ok: boolean; 
   if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
   try {
     const token = await getAccessToken();
-    const site = encodeURIComponent(process.env.GSC_SITE_URL!);
+    const site = encodeURIComponent(gscSite());
     const res = await fetch(
       `https://www.googleapis.com/webmasters/v3/sites/${site}/sitemaps/${encodeURIComponent(feedUrl)}`,
       { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
@@ -248,7 +258,7 @@ export async function gscInspectUrl(url: string): Promise<UrlInspection | null> 
       };
     }>("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
       inspectionUrl: url,
-      siteUrl: process.env.GSC_SITE_URL,
+      siteUrl: gscSite(),
     });
     const r = data.inspectionResult?.indexStatusResult;
     if (!r) return null;
