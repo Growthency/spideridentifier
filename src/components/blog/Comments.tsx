@@ -103,7 +103,7 @@ export function Comments({ slug }: { slug: string }) {
           <div className="rounded-2xl border border-foreground/8 bg-card/50 p-5 text-center">
             <p className="mb-3 text-sm text-foreground/60">Sign in to join the discussion.</p>
             <Link
-              href={`/login?next=/blog/${slug}`}
+              href={`/login?next=/${slug}`}
               className="inline-flex h-10 items-center rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950"
             >
               Sign in

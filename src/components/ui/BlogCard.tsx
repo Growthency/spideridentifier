@@ -9,7 +9,7 @@ export function BlogCard({ post, featured = false }: { post: BlogPost; featured?
   const accent = post.cover_accent === "crimson" ? "crimson" : "gold";
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={`/${post.slug}`}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-3xl border border-foreground/8 bg-card/60 transition-all duration-500 hover:-translate-y-1 hover:border-gold/30 hover:shadow-card",
         featured && "md:flex-row"

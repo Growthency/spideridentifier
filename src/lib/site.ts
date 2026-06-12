@@ -66,10 +66,10 @@ export const footerNav = {
   guides: {
     title: "Popular Guides",
     links: [
-      { title: "Black Widow Identification", href: "/blog/black-widow-spider-identification" },
-      { title: "Brown Recluse Identification", href: "/blog/brown-recluse-spider-identification" },
-      { title: "Wolf vs House Spider", href: "/blog/wolf-spider-vs-house-spider" },
-      { title: "Perfect Spider Photo", href: "/blog/perfect-spider-photo-for-ai-identification" },
+      { title: "Black Widow Identification", href: "/black-widow-spider-identification" },
+      { title: "Brown Recluse Identification", href: "/brown-recluse-spider-identification" },
+      { title: "Wolf vs House Spider", href: "/wolf-spider-vs-house-spider" },
+      { title: "Perfect Spider Photo", href: "/perfect-spider-photo-for-ai-identification" },
     ],
   },
 };

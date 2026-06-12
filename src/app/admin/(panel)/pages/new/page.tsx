@@ -13,7 +13,7 @@ export default async function NewPostPage() {
   ]);
   const interlinks: InterlinkCandidate[] = [
     ...species.map((s) => ({ phrase: s.common_name, href: `/species/${s.slug}` })),
-    ...posts.map((p) => ({ phrase: p.title.split(":")[0]?.trim() ?? p.title, href: `/blog/${p.slug}` })),
+    ...posts.map((p) => ({ phrase: p.title.split(":")[0]?.trim() ?? p.title, href: `/${p.slug}` })),
   ];
   return <PostEditor interlinks={interlinks} options={{ ...DEFAULT_EDITOR_OPTIONS, ...options }} />;
 }

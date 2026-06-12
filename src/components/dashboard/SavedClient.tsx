@@ -75,7 +75,7 @@ export function SavedClient({ initial }: { initial: SavedArticle[] }) {
           {pageItems.map((article) => (
             <div key={article.id} className="group flex flex-col overflow-hidden rounded-2xl border border-foreground/8 bg-card">
               {/* Thumbnail */}
-              <Link href={`/blog/${article.slug}`} className="relative block h-40 shrink-0 overflow-hidden bg-foreground/5">
+              <Link href={`/${article.slug}`} className="relative block h-40 shrink-0 overflow-hidden bg-foreground/5">
                 <BlogMedia
                   slug={article.slug}
                   accent={article.accent}
@@ -92,7 +92,7 @@ export function SavedClient({ initial }: { initial: SavedArticle[] }) {
                     {article.category}
                   </span>
                 )}
-                <Link href={`/blog/${article.slug}`}>
+                <Link href={`/${article.slug}`}>
                   <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-opacity hover:opacity-80">
                     {article.title}
                   </h3>

@@ -131,7 +131,7 @@ export function PostEditor({
     meta_description: post?.meta_description ?? "",
     featured_image: post?.featured_image ?? "",
     access_type: post?.access_type ?? "free",
-    layout: post?.layout ?? "full",
+    layout: post?.layout ?? "sidebar",
     custom_css: post?.custom_css ?? "",
     custom_schema: post?.custom_schema ?? "",
   });
@@ -247,7 +247,7 @@ export function PostEditor({
           phrase.length >= 4 &&
           plain.includes(phrase) &&
           !html.toLowerCase().includes(`href="${c.href.toLowerCase()}`) &&
-          c.href !== `/blog/${form.slug}`
+          c.href !== `/${form.slug}`
         );
       })
       .slice(0, 6);

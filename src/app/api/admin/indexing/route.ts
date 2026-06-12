@@ -30,7 +30,7 @@ async function allUrls(): Promise<{ url: string; published_at: string | null }[]
   const [posts, species] = await Promise.all([getBlogPosts(), getSpecies()]);
   return [
     ...STATIC_ROUTES.map((p) => ({ url: `${siteConfig.url}${p}`, published_at: null })),
-    ...posts.map((p) => ({ url: `${siteConfig.url}/blog/${p.slug}`, published_at: p.published_at })),
+    ...posts.map((p) => ({ url: `${siteConfig.url}/${p.slug}`, published_at: p.published_at })),
     ...species.map((s) => ({ url: `${siteConfig.url}/species/${s.slug}`, published_at: null })),
   ];
 }
