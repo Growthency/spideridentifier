@@ -47,6 +47,27 @@ create table if not exists public.external_link_rules (
   created_at timestamptz not null default now()
 );
 
+-- Author avatar on posts (photo URL — falls back to the bundled default).
+alter table public.blog_posts add column if not exists author_avatar text;
+
+-- Reader comments on blog posts. Written ONLY via the server route
+-- (signed-in users); public read.
+create table if not exists public.comments (
+  id uuid primary key default gen_random_uuid(),
+  post_slug text not null,
+  user_id uuid references public.profiles (id) on delete cascade,
+  author_name text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists comments_post_idx on public.comments (post_slug, created_at desc);
+
+-- Per-post view counters (incremented by the server route).
+create table if not exists public.post_views (
+  slug text primary key,
+  views bigint not null default 0
+);
+
 -- ── Row Level Security ──────────────────────────────────────────────────────
 alter table public.site_content enable row level security;
 alter table public.site_scripts enable row level security;
@@ -65,3 +86,11 @@ create policy "public read menu_items" on public.menu_items for select using (tr
 
 drop policy if exists "public read external_link_rules" on public.external_link_rules;
 create policy "public read external_link_rules" on public.external_link_rules for select using (true);
+
+alter table public.comments enable row level security;
+drop policy if exists "public read comments" on public.comments;
+create policy "public read comments" on public.comments for select using (true);
+
+alter table public.post_views enable row level security;
+drop policy if exists "public read post_views" on public.post_views;
+create policy "public read post_views" on public.post_views for select using (true);

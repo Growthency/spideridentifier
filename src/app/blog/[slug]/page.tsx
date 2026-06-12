@@ -5,6 +5,8 @@ import { ArrowLeft, Clock, Calendar, ScanSearch } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { Markdown } from "@/components/blog/Markdown";
 import { SaveArticleButton } from "@/components/blog/SaveArticleButton";
+import { Comments } from "@/components/blog/Comments";
+import { ViewCounter } from "@/components/blog/ViewCounter";
 import { BlogMedia } from "@/components/ui/BlogMedia";
 import { BlogCard } from "@/components/ui/BlogCard";
 import { blogPhotoCredits } from "@/content/blogPhotoCredits";
@@ -103,9 +105,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <PageHero eyebrow={post.category} title={post.title} subtitle={post.excerpt}>
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-foreground/55">
           <span className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-gradient text-xs font-bold text-ink-950">
-              {post.author_name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.author_avatar || "/images/authors/default-avatar.svg"}
+              alt={post.author_name}
+              className="h-8 w-8 rounded-full object-cover ring-1 ring-foreground/10"
+            />
             {post.author_name} · {post.author_role}
           </span>
           <span className="flex items-center gap-1.5">
@@ -114,6 +119,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <span className="flex items-center gap-1.5">
             <Clock className="h-4 w-4" /> {post.read_time} min read
           </span>
+          <ViewCounter slug={post.slug} />
         </div>
       </PageHero>
 
@@ -175,6 +181,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </Button>
             </div>
           </div>
+
+          {/* comments */}
+          <Comments slug={post.slug} />
 
           {/* related */}
           {related.length > 0 && (

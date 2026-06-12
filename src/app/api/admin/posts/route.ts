@@ -13,6 +13,7 @@ const postSchema = z.object({
   tags: z.array(z.string()).default([]),
   author_name: z.string().default("Spider Identifier"),
   author_role: z.string().default("Editorial"),
+  author_avatar: z.string().optional(),
   read_time: z.coerce.number().int().min(1).default(4),
   region: z.string().default("Worldwide"),
   level: z.enum(["Beginner", "Intermediate", "Advanced"]).default("Beginner"),
