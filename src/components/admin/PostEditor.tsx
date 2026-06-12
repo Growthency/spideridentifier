@@ -72,14 +72,14 @@ export function PostEditor({ post }: { post?: BlogPost }) {
     };
     delete (payload as Draft).tagsInput;
     try {
-      const res = await fetch("/api/admin/posts", {
+      const res = await fetch("/api/admin/pages", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Could not save");
-      router.push("/admin/posts");
+      router.push("/admin/pages");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save");
@@ -93,8 +93,8 @@ export function PostEditor({ post }: { post?: BlogPost }) {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <Link href="/admin/posts" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/55 hover:text-gold">
-        <ArrowLeft className="h-4 w-4" /> All posts
+      <Link href="/admin/pages" className="mb-6 inline-flex items-center gap-2 text-sm text-foreground/55 hover:text-gold">
+        <ArrowLeft className="h-4 w-4" /> All pages
       </Link>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

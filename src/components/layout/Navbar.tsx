@@ -10,12 +10,18 @@ import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { mainNav } from "@/lib/site";
+import type { MenuItem } from "@/lib/siteContent";
 import { cn } from "@/lib/utils";
 
-export function Navbar() {
+export function Navbar({ items = [] }: { items?: MenuItem[] }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  // Admin-managed menu wins when present; otherwise the built-in links.
+  const nav = items.length
+    ? items.map((i) => ({ title: i.label, href: i.url, target: i.target }))
+    : mainNav.map((i) => ({ ...i, target: "_self" as const }));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -56,7 +62,7 @@ export function Navbar() {
 
             {/* desktop nav */}
             <ul className="hidden items-center gap-1 lg:flex">
-              {mainNav.map((item) => (
+              {nav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -111,7 +117,7 @@ export function Navbar() {
           >
             <div className="glass-card mt-2 rounded-3xl p-3 shadow-card">
               <ul className="flex flex-col">
-                {mainNav.map((item, i) => (
+                {nav.map((item, i) => (
                   <m.li
                     key={item.href}
                     initial={{ opacity: 0, x: -10 }}

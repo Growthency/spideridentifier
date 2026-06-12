@@ -4,6 +4,9 @@ import "./globals.css";
 import { siteConfig } from "@/lib/site";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { Analytics } from "@/components/seo/Analytics";
+import { RawScripts } from "@/components/seo/RawScripts";
+import { getSiteChromeData } from "@/lib/siteContent";
+import { themeOverrideCss } from "@/lib/siteDefaults";
 import { BackdropGlobs } from "@/components/fx/BackdropGlobs";
 import { WebParticles } from "@/components/fx/WebParticles";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -65,10 +68,18 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Admin-managed chrome (scripts, theme, custom CSS, menus, footer copy) —
+  // all fall back to the built-in defaults when nothing is configured.
+  const chrome = await getSiteChromeData();
+  const themeCss = themeOverrideCss(chrome.theme);
+
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable}`} suppressHydrationWarning>
       <body className="grain relative min-h-screen bg-background font-sans text-foreground antialiased">
+        {themeCss && <style id="admin-theme" dangerouslySetInnerHTML={{ __html: themeCss }} />}
+        {chrome.customCss && <style id="admin-custom-css" dangerouslySetInnerHTML={{ __html: chrome.customCss }} />}
+        {chrome.scripts.length > 0 && <RawScripts scripts={chrome.scripts} />}
         <a
           href="#content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg"
@@ -78,7 +89,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <BackdropGlobs />
           <WebParticles />
-          <SiteChrome>{children}</SiteChrome>
+          <SiteChrome
+            headerMenu={chrome.headerMenu}
+            footerContent={chrome.footer}
+            footerMenus={{
+              explore: chrome.footerExplore,
+              company: chrome.footerCompany,
+              bottom: chrome.footerBottom,
+            }}
+          >
+            {children}
+          </SiteChrome>
         </ThemeProvider>
         <Analytics />
       </body>

@@ -4,11 +4,37 @@ import { PaymentBadges } from "@/components/layout/PaymentBadges";
 import { Logo } from "@/components/brand/Logo";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { siteConfig, footerNav } from "@/lib/site";
+import type { MenuItem } from "@/lib/siteContent";
+import { DEFAULT_FOOTER, type FooterContent } from "@/lib/siteDefaults";
 
 const iconMap = { instagram: Instagram, twitter: Twitter, facebook: Facebook, youtube: Youtube, linkedin: Linkedin };
 
-export function Footer() {
+const toLinks = (items: MenuItem[]) => items.map((i) => ({ title: i.label, href: i.url }));
+
+export function Footer({
+  content,
+  menus,
+}: {
+  content?: FooterContent;
+  menus?: { explore: MenuItem[]; company: MenuItem[]; bottom: MenuItem[] };
+}) {
   const year = new Date().getFullYear();
+  const c = { ...DEFAULT_FOOTER, ...content };
+
+  // Admin-managed menus override the built-in columns when present.
+  const columns = [
+    { title: footerNav.explore.title, links: menus?.explore.length ? toLinks(menus.explore) : footerNav.explore.links },
+    { title: footerNav.company.title, links: menus?.company.length ? toLinks(menus.company) : footerNav.company.links },
+    { title: footerNav.guides.title, links: footerNav.guides.links },
+  ];
+  const bottomLinks = menus?.bottom.length
+    ? toLinks(menus.bottom)
+    : [
+        { title: "Privacy", href: "/privacy" },
+        { title: "Terms", href: "/terms" },
+        { title: "Refund", href: "/refund" },
+        { title: "Disclaimer", href: "/disclaimer" },
+      ];
 
   return (
     <footer className="relative mt-24 border-t border-foreground/8">
@@ -17,10 +43,8 @@ export function Footer() {
         <div className="gradient-border mb-16 overflow-hidden rounded-4xl p-8 sm:p-10">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="max-w-md">
-              <h3 className="font-display text-2xl font-bold">Spider field notes, monthly.</h3>
-              <p className="mt-2 text-sm text-foreground/60">
-                New identification guides, species spotlights and safety tips — no spam, unsubscribe anytime.
-              </p>
+              <h3 className="font-display text-2xl font-bold">{c.newsletter_heading}</h3>
+              <p className="mt-2 text-sm text-foreground/60">{c.newsletter_sub}</p>
             </div>
             <NewsletterForm />
           </div>
@@ -30,15 +54,12 @@ export function Footer() {
           {/* brand */}
           <div className="col-span-2 md:col-span-4">
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/70">
-              AI-powered spider identification — instant species ID, venom-risk indicators and look-alike
-              alerts you can trust.
-            </p>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/70">{c.description}</p>
             <a
-              href={`mailto:${siteConfig.email}`}
+              href={`mailto:${c.contact_email}`}
               className="mt-4 inline-flex items-center gap-2 text-sm text-foreground/70 transition-colors hover:text-gold"
             >
-              <Mail className="h-4 w-4" /> {siteConfig.email}
+              <Mail className="h-4 w-4" /> {c.contact_email}
             </a>
             <div className="mt-5 flex items-center gap-2">
               {siteConfig.social.map((s) => {
@@ -60,7 +81,7 @@ export function Footer() {
           </div>
 
           {/* link columns */}
-          {Object.values(footerNav).map((col) => (
+          {columns.map((col) => (
             <div key={col.title} className="md:col-span-3 lg:col-span-2">
               <h4 className="text-sm font-semibold text-foreground">{col.title}</h4>
               <ul className="mt-4 space-y-3">
@@ -82,31 +103,24 @@ export function Footer() {
         {/* payments & trust */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 sm:flex-row">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-foreground/70">We accept</span>
+            <span className="text-xs font-medium text-foreground/70">{c.accept_label}</span>
             <PaymentBadges />
           </div>
           <p className="flex items-center gap-2 text-xs text-foreground/70">
-            <Lock className="h-3.5 w-3.5 text-gold" /> Secured by Paddle · 256-bit SSL encryption
+            <Lock className="h-3.5 w-3.5 text-gold" /> {c.secured_line}
           </p>
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-foreground/8 pt-8 text-xs text-foreground/65 sm:flex-row">
           <p>
-            © {year} {siteConfig.name}. All rights reserved.
+            © {year} {c.copyright}
           </p>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-foreground/70">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-foreground/70">
-              Terms
-            </Link>
-            <Link href="/refund" className="hover:text-foreground/70">
-              Refund
-            </Link>
-            <Link href="/disclaimer" className="hover:text-foreground/70">
-              Disclaimer
-            </Link>
+            {bottomLinks.map((l) => (
+              <Link key={l.href + l.title} href={l.href} className="hover:text-foreground/70">
+                {l.title}
+              </Link>
+            ))}
           </div>
         </div>
 
@@ -114,9 +128,7 @@ export function Footer() {
         <div className="mt-8 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-foreground/75">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--crimson-soft))]" />
           <p>
-            <strong className="text-foreground/80">Safety note:</strong> Spider Identifier provides the closest
-            AI match, not a guaranteed identification or medical diagnosis. Never handle a spider you suspect is
-            venomous, and for any suspected bite seek professional medical advice immediately.
+            <strong className="text-foreground/80">Safety note:</strong> {c.safety_note}
           </p>
         </div>
       </div>

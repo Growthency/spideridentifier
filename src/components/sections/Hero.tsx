@@ -6,6 +6,8 @@ import { ScrollCue } from "@/components/fx/ScrollCue";
 import { SpiderMark } from "@/components/brand/Logo";
 import { heroRotatingWords, trustBadges } from "@/content/home";
 import { siteConfig } from "@/lib/site";
+import { getSiteContent } from "@/lib/siteContent";
+import { DEFAULT_HOMEPAGE, type HomepageContent } from "@/lib/siteDefaults";
 
 /** Above-the-fold reveal — pure CSS so the LCP headline paints immediately. */
 function Rise({ delay = 0, children }: { delay?: number; children: React.ReactNode }) {
@@ -16,7 +18,13 @@ function Rise({ delay = 0, children }: { delay?: number; children: React.ReactNo
   );
 }
 
-export function Hero() {
+export async function Hero() {
+  // Admin-editable hero copy (Homepage page in /admin) with built-in fallback.
+  const home: HomepageContent = {
+    ...DEFAULT_HOMEPAGE,
+    ...(await getSiteContent<HomepageContent>("homepage", DEFAULT_HOMEPAGE)),
+  };
+
   return (
     <section className="relative overflow-hidden pb-12 pt-32 sm:pt-36 lg:pt-40">
       {/* floating decorative marks */}
@@ -27,14 +35,14 @@ export function Hero() {
         <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <Rise>
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--gold-soft))]">
-              <Sparkles className="h-3.5 w-3.5" /> AI-Powered Arachnology
+              <Sparkles className="h-3.5 w-3.5" /> {home.eyebrow}
             </span>
           </Rise>
 
           <Rise delay={0.05}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
               <span className="text-gradient-animate">Identify</span>{" "}
-              <span className="text-foreground">any spider</span>
+              <span className="text-foreground">{home.title_static}</span>
               <br />
               <Typewriter words={heroRotatingWords} />
             </h1>
@@ -42,8 +50,7 @@ export function Hero() {
 
           <Rise delay={0.1}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-foreground/65">
-              Upload a single photo and discover the species in seconds — complete with venom-risk indicators,
-              look-alike alerts, habitat data and expert guides. Free to try, no app required.
+              {home.subtitle}
             </p>
           </Rise>
 
@@ -51,10 +58,10 @@ export function Hero() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button href="/#identify" size="lg">
                 <ScanSearch className="h-5 w-5" />
-                Identify a Spider
+                {home.cta_primary}
               </Button>
               <Button href="/species" variant="secondary" size="lg">
-                Browse species
+                {home.cta_secondary}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
