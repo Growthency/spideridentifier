@@ -53,9 +53,14 @@ export const metadata: Metadata = {
     },
   },
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
-  // Search Console ownership proof — public by design, env var overrides.
+  // Search Console ownership proofs — public by design. First token verifies
+  // the owner's Google account, second verifies the analytics service account
+  // (lets it call the URL-inspection / Indexing APIs without UI access).
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION || "2WI2zdSsYSCEP0bS5a9VB3TrIfadrnlljH7yDR54yH4",
+    google: [
+      process.env.GOOGLE_SITE_VERIFICATION || "2WI2zdSsYSCEP0bS5a9VB3TrIfadrnlljH7yDR54yH4",
+      "6zQVpl15SESJaQIxvh9bT9tN5XUHMxZMP7p4KqNiCm0",
+    ],
   },
 };
 
