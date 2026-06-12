@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { toWebp } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { uploadToBucket } from "@/lib/storageUpload";
 import { CREDITS_PER_SCAN, GUEST_FREE_SCANS } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -97,17 +98,20 @@ export async function POST(req: Request) {
     const text = block && block.type === "text" ? block.text : "";
     const result = parseResult(text);
 
-    // store image + analysis
-    const path = `uploads/${randomUUID()}.webp`;
-    await admin.storage.from("scans").upload(path, webp, { contentType: "image/webp", upsert: false });
-    const { data: pub } = admin.storage.from("scans").getPublicUrl(path);
-    const imageUrl = pub.publicUrl;
+    // store image + analysis (identification still succeeds if storage is down)
+    let imageUrl: string | null = null;
+    try {
+      const path = `uploads/${randomUUID()}.webp`;
+      imageUrl = await uploadToBucket(admin, "scans", path, webp, { contentType: "image/webp", upsert: false });
+    } catch {
+      imageUrl = null;
+    }
 
     await admin.from("analyses").insert({
       user_id: user?.id ?? null,
       ip_address: user ? null : clientIp(req),
       image_url: imageUrl,
-      image_urls: [imageUrl],
+      image_urls: imageUrl ? [imageUrl] : [],
       result,
       credits_used: user ? CREDITS_PER_SCAN : 0,
     });
