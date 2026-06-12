@@ -26,7 +26,7 @@ export interface FooterContent {
 export const DEFAULT_FOOTER: FooterContent = {
   description:
     "AI-powered spider identification — instant species ID, venom-risk indicators and look-alike alerts you can trust.",
-  contact_email: "hello@spideridentifier.com",
+  contact_email: "hello@spideridentifier.online",
   newsletter_heading: "Spider field notes, monthly.",
   newsletter_sub: "New identification guides, species spotlights and safety tips — no spam, unsubscribe anytime.",
   accept_label: "We accept",

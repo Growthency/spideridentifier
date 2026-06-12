@@ -12,7 +12,21 @@ import type { BlogPost, Species } from "@/lib/types";
  * generated (ISR) — never per-request rendered just for public content.
  */
 
+/**
+ * Database posts and the bundled starter guides live side by side: the DB
+ * wins on slug collisions, everything sorts newest-first, and posts dated in
+ * the future stay hidden until their publish time (scheduling).
+ */
+function mergePosts(db: BlogPost[]): BlogPost[] {
+  const taken = new Set(db.map((p) => p.slug));
+  const now = Date.now();
+  return [...db, ...fallbackPosts.filter((p) => !taken.has(p.slug))]
+    .filter((p) => !p.published_at || +new Date(p.published_at) <= now)
+    .sort((a, b) => +new Date(b.published_at) - +new Date(a.published_at));
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
+  let db: BlogPost[] = [];
   if (publicConfigured) {
     try {
       const supabase = createPublicClient();
@@ -21,32 +35,17 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
         .select("*")
         .eq("status", "published")
         .order("published_at", { ascending: false });
-      if (!error && data && data.length) return data as BlogPost[];
+      if (!error && data) db = data as BlogPost[];
     } catch {
       // fall through to bundled content
     }
   }
-  return [...fallbackPosts].sort(
-    (a, b) => +new Date(b.published_at) - +new Date(a.published_at)
-  );
+  return mergePosts(db);
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  if (publicConfigured) {
-    try {
-      const supabase = createPublicClient();
-      const { data } = await supabase!
-        .from("blog_posts")
-        .select("*")
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
-      if (data) return data as BlogPost;
-    } catch {
-      // fall through
-    }
-  }
-  return fallbackPosts.find((p) => p.slug === slug) ?? null;
+  const posts = await getBlogPosts();
+  return posts.find((p) => p.slug === slug) ?? null;
 }
 
 export async function getFeaturedPosts(limit = 2): Promise<BlogPost[]> {
