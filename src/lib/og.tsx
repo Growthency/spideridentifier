@@ -24,6 +24,23 @@ export async function loadPhoto(dir: "blog" | "species", slug: string): Promise<
   }
 }
 
+/** Admin "Featured Image" → buffer. Handles remote URLs and /public paths. */
+export async function loadPhotoFromUrl(url: string): Promise<Buffer | null> {
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      const res = await fetch(url, { next: { revalidate: 3600 } });
+      if (!res.ok) return null;
+      return Buffer.from(await res.arrayBuffer());
+    }
+    if (url.startsWith("/") && !url.includes("..")) {
+      return await readFile(path.join(process.cwd(), "public", url.replace(/^\//, "")));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Compose the final JPEG: photo (or dark brand base) + Satori overlay. */
 export async function composeOgJpeg(photo: Buffer | null, overlay: React.ReactElement): Promise<Buffer> {
   const sharp = (await import("sharp")).default;

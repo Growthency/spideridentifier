@@ -1,6 +1,6 @@
 import { getBlogPost } from "@/lib/data";
 import { siteConfig } from "@/lib/site";
-import { composeOgJpeg, loadPhoto, ogResponse, OgFrame, OgChip } from "@/lib/og";
+import { composeOgJpeg, loadPhoto, loadPhotoFromUrl, ogResponse, OgFrame, OgChip } from "@/lib/og";
 
 /**
  * Social-share card for blog posts — cover photo + title + brand, served as
@@ -10,7 +10,8 @@ import { composeOgJpeg, loadPhoto, ogResponse, OgFrame, OgChip } from "@/lib/og"
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getBlogPost(slug);
-  const photo = await loadPhoto("blog", slug);
+  // Admin featured image wins; bundled slug photo is the fallback.
+  const photo = (post?.featured_image ? await loadPhotoFromUrl(post.featured_image) : null) ?? (await loadPhoto("blog", slug));
   const title = post?.title ?? "Spider identification guide";
   const category = post?.category ?? "Guide";
   const host = new URL(siteConfig.url).hostname;

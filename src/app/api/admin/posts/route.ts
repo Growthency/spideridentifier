@@ -23,6 +23,11 @@ const postSchema = z.object({
   published_at: z.string().optional(),
   meta_title: z.string().optional(),
   meta_description: z.string().optional(),
+  featured_image: z.string().optional(),
+  access_type: z.enum(["free", "premium"]).default("free"),
+  layout: z.enum(["full", "sidebar"]).default("full"),
+  custom_css: z.string().optional(),
+  custom_schema: z.string().optional(),
 });
 
 async function guard() {
