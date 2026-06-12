@@ -31,7 +31,7 @@ export default async function RankTrackerAdmin() {
   ]);
 
   let rows: GscRow[] = [];
-  let gscError = false;
+  let gscError = "";
   if (gscConfigured) {
     try {
       rows = await gscSearchAnalytics({
@@ -40,8 +40,8 @@ export default async function RankTrackerAdmin() {
         dimensions: ["query"],
         rowLimit: 100,
       });
-    } catch {
-      gscError = true;
+    } catch (e) {
+      gscError = e instanceof Error ? e.message : "Request failed";
     }
   }
 
@@ -64,9 +64,15 @@ export default async function RankTrackerAdmin() {
       />
 
       {gscError && (
-        <p className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
-          Search Console request failed — check that the service account has access to the property.
-        </p>
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
+          <p className="font-semibold">Search Console request failed</p>
+          <p className="mt-1 break-all text-xs opacity-80">{gscError}</p>
+          <p className="mt-2 text-xs text-foreground/60">
+            If ownership was granted in the last few minutes, Google needs a moment to propagate — hit{" "}
+            <span className="font-semibold">Clear Cache</span> on the Dashboard and reload. Also confirm{" "}
+            <code>GSC_SITE_URL</code> matches the property exactly.
+          </p>
+        </div>
       )}
 
       {/* Tracked keywords with live checks */}

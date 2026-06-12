@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Users,
   Calendar,
@@ -13,17 +12,57 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { getAnalyticsSummary, ga4Configured, gscConfigured } from "@/lib/google";
+import { getAnalyticsSummary, ga4Configured, gscConfigured, gscSearchAnalytics } from "@/lib/google";
 import { ClearCacheButton } from "@/components/admin/ClearCacheButton";
+import { DashboardFilters, PERIOD_LABELS, CHART_LABELS } from "@/components/admin/DashboardFilters";
 
 export const revalidate = 600;
 
-const PERIODS = [
-  { key: "7", label: "Last 7 Days" },
-  { key: "30", label: "Last 30 Days" },
-  { key: "90", label: "Last 90 Days" },
-  { key: "365", label: "Last 365 Days" },
-] as const;
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+/** Resolve a period key to explicit GA4/GSC date strings + a short label. */
+function resolvePeriod(key: string): { start: string; end: string; label: string; short: string } {
+  const today = new Date();
+  const end = iso(today);
+  switch (key) {
+    case "7d":
+      return { start: iso(new Date(Date.now() - 7 * 86400000)), end, label: PERIOD_LABELS["7d"], short: "7d" };
+    case "this_month":
+      return {
+        start: iso(new Date(today.getFullYear(), today.getMonth(), 1)),
+        end,
+        label: PERIOD_LABELS.this_month,
+        short: "This Month",
+      };
+    case "last_month": {
+      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const last = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { start: iso(first), end: iso(last), label: PERIOD_LABELS.last_month, short: "Last Month" };
+    }
+    case "365d":
+      return { start: iso(new Date(Date.now() - 365 * 86400000)), end, label: PERIOD_LABELS["365d"], short: "365d" };
+    case "lifetime":
+      // earliest date the GA4 Data API accepts
+      return { start: "2015-08-14", end, label: PERIOD_LABELS.lifetime, short: "Lifetime" };
+    default:
+      return { start: iso(new Date(Date.now() - 30 * 86400000)), end, label: PERIOD_LABELS["30d"], short: "30d" };
+  }
+}
+
+/** Collapse long ranges into weekly buckets so the chart stays readable. */
+function bucketize(points: { date: string; users: number; clicks: number }[]) {
+  if (points.length <= 92) return points;
+  const out: { date: string; users: number; clicks: number }[] = [];
+  for (let i = 0; i < points.length; i += 7) {
+    const week = points.slice(i, i + 7);
+    out.push({
+      date: week[0].date,
+      users: week.reduce((s, p) => s + p.users, 0),
+      clicks: week.reduce((s, p) => s + p.clicks, 0),
+    });
+  }
+  return out;
+}
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
   return (
@@ -52,16 +91,25 @@ function Chip({ ok, label }: { ok: boolean; label: string }) {
 export default async function AdminDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; chart?: string }>;
 }) {
-  const { period } = await searchParams;
-  const days = Math.max(7, Math.min(365, Number(period) || 30));
-  const periodLabel = PERIODS.find((p) => p.key === String(days))?.label ?? `Last ${days} Days`;
+  const params = await searchParams;
+  const periodKey = params.period && PERIOD_LABELS[params.period] ? params.period : "30d";
+  const chartKey = params.chart && CHART_LABELS[params.chart] ? params.chart : "users";
+  const { start, end, label: periodLabel, short } = resolvePeriod(periodKey);
 
   let data = null;
   let loadError = false;
+  let clicksDaily: { date: string; clicks: number }[] = [];
   try {
-    data = await getAnalyticsSummary(days);
+    [data, clicksDaily] = await Promise.all([
+      getAnalyticsSummary(start, end),
+      gscConfigured
+        ? gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["date"], rowLimit: 1000 }).then((rows) =>
+            rows.map((r) => ({ date: (r.keys?.[0] ?? "").replace(/-/g, ""), clicks: r.clicks }))
+          )
+        : Promise.resolve([]),
+    ]);
   } catch {
     loadError = true;
   }
@@ -69,7 +117,16 @@ export default async function AdminDashboard({
   const fmt = (v: number) => v.toLocaleString("en-US");
   const maxViews = data?.topPages[0]?.views || 1;
   const maxUsers = data?.topCountries[0]?.users || 1;
-  const chartMax = Math.max(...(data?.daily.map((d) => d.users) ?? [0]), 1);
+
+  // merge GA users + GSC clicks per day for the chart
+  const clickMap = new Map(clicksDaily.map((c) => [c.date, c.clicks]));
+  const merged = bucketize(
+    (data?.daily ?? []).map((d) => ({ date: d.date, users: d.users, clicks: clickMap.get(d.date) ?? 0 }))
+  );
+  const chartMax = Math.max(
+    1,
+    ...merged.map((d) => (chartKey === "users" ? d.users : chartKey === "clicks" ? d.clicks : Math.max(d.users, d.clicks)))
+  );
   const prettyDate = (yyyymmdd: string) => {
     if (yyyymmdd.length !== 8) return yyyymmdd;
     return new Date(`${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`).toLocaleDateString("en-US", {
@@ -88,20 +145,7 @@ export default async function AdminDashboard({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ClearCacheButton />
-          {/* Period selector */}
-          <div className="flex items-center gap-1 rounded-lg border border-foreground/10 bg-card p-1 text-xs">
-            {PERIODS.map((p) => (
-              <Link
-                key={p.key}
-                href={`/admin?period=${p.key}`}
-                className={`rounded-md px-2.5 py-1.5 font-medium transition-colors ${
-                  String(days) === p.key ? "bg-emerald-500/15 text-emerald-500" : "text-foreground/55 hover:bg-foreground/5"
-                }`}
-              >
-                {p.label}
-              </Link>
-            ))}
-          </div>
+          <DashboardFilters period={periodKey} chart={chartKey} />
           <Chip ok={ga4Configured} label="GA4 Connected" />
           <Chip ok={gscConfigured} label="Search Console" />
         </div>
@@ -125,49 +169,79 @@ export default async function AdminDashboard({
         <div className="mb-6 rounded-xl border border-foreground/8 bg-card p-8 text-center">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 text-foreground/20" />
           <h2 className="mb-2 text-lg font-semibold text-foreground">Failed to Load Analytics</h2>
-          <p className="text-sm text-foreground/55">Please check your API connections and try again.</p>
+          <p className="text-sm text-foreground/55">
+            If access was granted just now, Google can take a few minutes — hit Clear Cache and retry.
+          </p>
         </div>
       )}
 
       {/* Stat cards — row 1 */}
       <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label={`Users (${days}d)`} value={fmt(data?.users30d ?? 0)} icon={Users} />
+        <StatCard label={`Users (${short})`} value={fmt(data?.users30d ?? 0)} icon={Users} />
         <StatCard label="Users (7d)" value={fmt(data?.users7d ?? 0)} icon={Calendar} />
         <StatCard label="Today" value={fmt(data?.usersToday ?? 0)} icon={Clock} />
-        <StatCard label={`New Users (${days}d)`} value={fmt(data?.newUsers30d ?? 0)} icon={TrendingUp} />
+        <StatCard label={`New Users (${short})`} value={fmt(data?.newUsers30d ?? 0)} icon={TrendingUp} />
       </div>
 
       {/* Stat cards — row 2 */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label={`Sessions (${days}d)`} value={fmt(data?.sessions30d ?? 0)} icon={Activity} />
-        <StatCard label={`Page Views (${days}d)`} value={fmt(data?.pageViews30d ?? 0)} icon={Eye} />
+        <StatCard label={`Sessions (${short})`} value={fmt(data?.sessions30d ?? 0)} icon={Activity} />
+        <StatCard label={`Page Views (${short})`} value={fmt(data?.pageViews30d ?? 0)} icon={Eye} />
         <StatCard label="Total Active Users" value={fmt(data?.users30d ?? 0)} icon={Layers} />
       </div>
 
-      {/* Daily active users chart */}
+      {/* Daily chart */}
       <div className="mb-6 rounded-xl border border-foreground/8 bg-card p-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <BarChart3 className="h-4 w-4 text-[rgb(var(--gold-soft))]" />
-            Daily Active Users — {periodLabel}
+            {CHART_LABELS[chartKey]} — {periodLabel}
           </h2>
-          <span className="text-xs text-foreground/45">from Google Analytics</span>
+          <span className="text-xs text-foreground/45">{chartKey === "both" ? "GA4 + GSC" : chartKey === "clicks" ? "from Search Console" : "from Google Analytics"}</span>
         </div>
-        {data && data.daily.length > 0 ? (
+
+        {/* legend for the combined view */}
+        {chartKey === "both" && (
+          <div className="mb-3 flex items-center gap-4 text-xs text-foreground/60">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-emerald-400" /> Users
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-sky-400" /> Clicks
+            </span>
+          </div>
+        )}
+
+        {merged.length > 0 ? (
           <div>
             <div className="flex h-48 items-end gap-[3px]">
-              {data.daily.map((d) => (
-                <div
-                  key={d.date}
-                  title={`${prettyDate(d.date)}: ${fmt(d.users)} users`}
-                  className="flex-1 rounded-t-md bg-emerald-400/80 transition-colors hover:bg-emerald-500"
-                  style={{ height: `${Math.max(3, (d.users / chartMax) * 100)}%` }}
-                />
-              ))}
+              {merged.map((d) =>
+                chartKey === "both" ? (
+                  <div key={d.date} title={`${prettyDate(d.date)}: ${fmt(d.users)} users · ${fmt(d.clicks)} clicks`} className="flex flex-1 items-end gap-[1px]">
+                    <div
+                      className="flex-1 rounded-t-sm bg-emerald-400/85 transition-colors hover:bg-emerald-500"
+                      style={{ height: `${Math.max(2, (d.users / chartMax) * 100)}%` }}
+                    />
+                    <div
+                      className="flex-1 rounded-t-sm bg-sky-400/85 transition-colors hover:bg-sky-500"
+                      style={{ height: `${Math.max(2, (d.clicks / chartMax) * 100)}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    key={d.date}
+                    title={`${prettyDate(d.date)}: ${fmt(chartKey === "clicks" ? d.clicks : d.users)} ${chartKey === "clicks" ? "clicks" : "users"}`}
+                    className={`flex-1 rounded-t-md transition-colors ${
+                      chartKey === "clicks" ? "bg-sky-400/85 hover:bg-sky-500" : "bg-emerald-400/80 hover:bg-emerald-500"
+                    }`}
+                    style={{ height: `${Math.max(3, ((chartKey === "clicks" ? d.clicks : d.users) / chartMax) * 100)}%` }}
+                  />
+                )
+              )}
             </div>
             <div className="mt-2 flex justify-between text-[10px] text-foreground/40">
-              <span>{prettyDate(data.daily[0]?.date ?? "")}</span>
-              <span>{prettyDate(data.daily[data.daily.length - 1]?.date ?? "")}</span>
+              <span>{prettyDate(merged[0]?.date ?? "")}</span>
+              <span>{prettyDate(merged[merged.length - 1]?.date ?? "")}</span>
             </div>
           </div>
         ) : (
