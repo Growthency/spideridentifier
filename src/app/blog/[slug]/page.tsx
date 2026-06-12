@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/fx/Reveal";
 import { JsonLd, breadcrumbSchema } from "@/components/seo/JsonLd";
 import { getBlogPost, getRelatedPosts } from "@/lib/data";
+import { getExternalLinkRules } from "@/lib/siteContent";
 import { blogPosts } from "@/content/blog";
 import { formatDate } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
@@ -70,7 +71,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = await getBlogPost(slug);
   if (!post) notFound();
 
-  const related = await getRelatedPosts(slug, 3);
+  const [related, linkRules] = await Promise.all([getRelatedPosts(slug, 3), getExternalLinkRules()]);
   const accent = post.cover_accent === "crimson" ? "crimson" : "gold";
 
   return (
@@ -150,7 +151,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           )}
 
           <div className="mx-auto max-w-3xl">
-            <Markdown content={post.content} />
+            <Markdown content={post.content} linkRules={linkRules} />
 
             {/* tags */}
             {post.tags.length > 0 && (

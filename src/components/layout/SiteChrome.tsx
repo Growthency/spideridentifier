@@ -6,6 +6,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import type { MenuItem } from "@/lib/siteContent";
+import type { FooterContent } from "@/lib/siteDefaults";
 
 /** Route prefixes that render as full-screen app shells (own sidebar / chrome). */
 const APP_PREFIXES = ["/dashboard", "/admin"];
@@ -15,7 +17,17 @@ const APP_PREFIXES = ["/dashboard", "/admin"];
  * App areas (user dashboard, admin panel) bring their own shell, so they
  * render bare — no marketing chrome.
  */
-export function SiteChrome({ children }: { children: React.ReactNode }) {
+export function SiteChrome({
+  children,
+  headerMenu = [],
+  footerContent,
+  footerMenus,
+}: {
+  children: React.ReactNode;
+  headerMenu?: MenuItem[];
+  footerContent?: FooterContent;
+  footerMenus?: { explore: MenuItem[]; company: MenuItem[]; bottom: MenuItem[] };
+}) {
   const pathname = usePathname() ?? "";
   const isApp = APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
@@ -31,11 +43,11 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <LazyMotion features={domMax}>
       <ScrollProgress />
       <div className="relative z-10 flex min-h-screen flex-col">
-        <Navbar />
+        <Navbar items={headerMenu} />
         <main id="content" className="flex-1">
           {children}
         </main>
-        <Footer />
+        <Footer content={footerContent} menus={footerMenus} />
       </div>
       <ScrollToTop />
     </LazyMotion>

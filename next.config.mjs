@@ -30,7 +30,12 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   // The identifier now lives on the home page; bounce the old route to it.
   async redirects() {
-    return [{ source: "/identify", destination: "/#identify", permanent: true }];
+    return [
+      { source: "/identify", destination: "/#identify", permanent: true },
+      // Content manager moved under /admin/pages
+      { source: "/admin/posts", destination: "/admin/pages", permanent: false },
+      { source: "/admin/posts/:path*", destination: "/admin/pages/:path*", permanent: false },
+    ];
   },
   async headers() {
     return [

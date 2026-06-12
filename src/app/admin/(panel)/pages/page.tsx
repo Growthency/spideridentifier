@@ -23,10 +23,10 @@ export default async function AdminPostsPage() {
     <div className="mx-auto max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold">Blog posts</h1>
-          <p className="mt-1 text-sm text-foreground/55">Create, edit and publish your guides.</p>
+          <h1 className="font-display text-2xl font-bold">Pages</h1>
+          <p className="mt-1 text-sm text-foreground/55">Create, edit and publish your articles and guides.</p>
         </div>
-        <Link href="/admin/posts/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950">
+        <Link href="/admin/pages/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950">
           <PlusCircle className="h-4.5 w-4.5" /> New post
         </Link>
       </div>
@@ -41,7 +41,7 @@ export default async function AdminPostsPage() {
           <FileText className="h-10 w-10 text-foreground/30" />
           <p className="mt-4 font-medium">No posts yet</p>
           <p className="mt-1 text-sm text-foreground/50">Write your first guide or run the seed script.</p>
-          <Link href="/admin/posts/new" className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950">
+          <Link href="/admin/pages/new" className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-brand-gradient px-5 text-sm font-semibold text-ink-950">
             <PlusCircle className="h-4 w-4" /> New post
           </Link>
         </div>
