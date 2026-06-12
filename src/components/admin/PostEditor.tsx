@@ -33,6 +33,7 @@ import {
 import type { BlogPost } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
+import { DEFAULT_EDITOR_OPTIONS, type EditorOptions } from "@/lib/siteDefaults";
 
 export interface InterlinkCandidate {
   phrase: string;
@@ -96,9 +97,18 @@ function mdToHtml(md: string): string {
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
-export function PostEditor({ post, interlinks = [] }: { post?: BlogPost; interlinks?: InterlinkCandidate[] }) {
+export function PostEditor({
+  post,
+  interlinks = [],
+  options: initialOptions,
+}: {
+  post?: BlogPost;
+  interlinks?: InterlinkCandidate[];
+  options?: EditorOptions;
+}) {
   const router = useRouter();
   const editing = Boolean(post?.id);
+  const [options, setOptions] = useState<EditorOptions>({ ...DEFAULT_EDITOR_OPTIONS, ...initialOptions });
 
   const [form, setForm] = useState<Draft>({
     title: post?.title ?? "",
@@ -135,6 +145,37 @@ export function PostEditor({ post, interlinks = [] }: { post?: BlogPost; interli
   const inlineRef = useRef<HTMLInputElement>(null);
 
   const set = useCallback((k: keyof Draft, v: unknown) => setForm((f) => ({ ...f, [k]: v })), []);
+
+  /* ── editable dropdown option lists (shared across the whole editor) ── */
+  async function saveOptions(next: EditorOptions) {
+    setOptions(next);
+    try {
+      await fetch("/api/admin/site", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_content", key: "editor_options", value: next }),
+      });
+    } catch {
+      // keep the in-memory list; persistence retries on the next change
+    }
+  }
+
+  function addOption(listKey: keyof EditorOptions, formKey: keyof Draft) {
+    const v = window.prompt("Add new option")?.trim();
+    if (!v) return;
+    const list = options[listKey];
+    if (!list.includes(v)) saveOptions({ ...options, [listKey]: [...list, v] });
+    set(formKey, v);
+  }
+
+  function removeOption(listKey: keyof EditorOptions, formKey: keyof Draft, current: string) {
+    const list = options[listKey];
+    if (list.length <= 1) return;
+    if (!window.confirm(`Remove "${current}" from the list? Existing posts keep their value.`)) return;
+    const next = list.filter((o) => o !== current);
+    saveOptions({ ...options, [listKey]: next });
+    set(formKey, next[0]);
+  }
 
   // seed the editable area once (and when toggling back from HTML view)
   useEffect(() => {
@@ -296,6 +337,46 @@ export function PostEditor({ post, interlinks = [] }: { post?: BlogPost; interli
   );
 
   const Divider = () => <span className="mx-0.5 h-5 w-px shrink-0 bg-foreground/10" />;
+
+  /** Select with admin-editable options: ＋ adds a new entry, 🗑 removes the selected one. */
+  const EditableSelect = ({
+    listKey,
+    formKey,
+    value,
+  }: {
+    listKey: keyof EditorOptions;
+    formKey: keyof Draft;
+    value: string;
+  }) => {
+    const list = options[listKey];
+    const merged = list.includes(value) || !value ? list : [value, ...list];
+    return (
+      <div className="flex items-center gap-1.5">
+        <select className={field} value={value} onChange={(e) => set(formKey, e.target.value)}>
+          {merged.map((o) => (
+            <option key={o}>{o}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => addOption(listKey, formKey)}
+          title="Add new option"
+          className="grid h-[42px] w-9 shrink-0 place-items-center rounded-xl border border-emerald-500/35 bg-emerald-500/10 text-base font-bold text-emerald-600 hover:bg-emerald-500/15"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => removeOption(listKey, formKey, value)}
+          disabled={list.length <= 1}
+          title="Remove selected option"
+          className="grid h-[42px] w-9 shrink-0 place-items-center rounded-xl border border-red-400/30 bg-red-500/8 text-sm text-red-500 hover:bg-red-500/15 disabled:opacity-40"
+        >
+          ✕
+        </button>
+      </div>
+    );
+  };
 
   const TABLE_HTML =
     "<table><thead><tr><th>Heading</th><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr></tbody></table><p><br/></p>";
@@ -648,17 +729,9 @@ export function PostEditor({ post, interlinks = [] }: { post?: BlogPost; interli
           {/* Category */}
           <div className={cardCls}>
             <p className={cardTitle}>Category</p>
-            <select className={field} value={form.category} onChange={(e) => set("category", e.target.value)}>
-              {["Species Guide", "Identification", "Safety", "Behavior", "Photography", "Comparison Guide", "Educational"].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
+            <EditableSelect listKey="categories" formKey="category" value={form.category ?? ""} />
             <label className="mb-1 mt-3 block text-xs font-medium text-foreground/55">Cover accent</label>
-            <select className={field} value={form.cover_accent} onChange={(e) => set("cover_accent", e.target.value)}>
-              <option value="gold">gold</option>
-              <option value="crimson">crimson</option>
-              <option value="dual">dual</option>
-            </select>
+            <EditableSelect listKey="cover_accents" formKey="cover_accent" value={form.cover_accent ?? "gold"} />
           </div>
 
           {/* Access type */}
@@ -680,21 +753,13 @@ export function PostEditor({ post, interlinks = [] }: { post?: BlogPost; interli
           {/* Level */}
           <div className={cardCls}>
             <p className={cardTitle}>Level</p>
-            <select className={field} value={form.level} onChange={(e) => set("level", e.target.value)}>
-              <option>Beginner</option>
-              <option>Intermediate</option>
-              <option>Advanced</option>
-            </select>
+            <EditableSelect listKey="levels" formKey="level" value={form.level ?? "Beginner"} />
           </div>
 
           {/* Region */}
           <div className={cardCls}>
             <p className={cardTitle}>Region</p>
-            <select className={field} value={form.region} onChange={(e) => set("region", e.target.value)}>
-              {["Worldwide", "North America", "South America", "Europe", "Asia", "Africa", "Australia"].map((r) => (
-                <option key={r}>{r}</option>
-              ))}
-            </select>
+            <EditableSelect listKey="regions" formKey="region" value={form.region ?? "Worldwide"} />
           </div>
 
           {/* Custom CSS */}
