@@ -181,6 +181,33 @@ export async function getAnalyticsSummary(
 
 /* ── Search Console ──────────────────────────────────────────────────────── */
 
+let triedSiteAdd = false;
+
+/**
+ * The service account needs the property in its own Search Console site list.
+ * A verified owner (Site Verification API) may self-register via sites.add —
+ * so on the first 403 we register once and retry the call.
+ */
+async function withGscAccess<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (triedSiteAdd || !/403/.test(msg)) throw e;
+    triedSiteAdd = true;
+    try {
+      const token = await getAccessToken();
+      await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(gscSite())}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // registration failed — the retry below surfaces the real error
+    }
+    return call();
+  }
+}
+
 export interface GscRow {
   keys?: string[];
   clicks: number;
@@ -198,9 +225,11 @@ export async function gscSearchAnalytics(body: {
 }): Promise<GscRow[]> {
   if (!gscConfigured) return [];
   const site = encodeURIComponent(gscSite());
-  const data = await googleFetch<{ rows?: GscRow[] }>(
-    `https://www.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,
-    body
+  const data = await withGscAccess(() =>
+    googleFetch<{ rows?: GscRow[] }>(
+      `https://www.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,
+      body
+    )
   );
   return data.rows ?? [];
 }
@@ -230,45 +259,54 @@ export async function indexingPublish(url: string): Promise<{ ok: boolean; error
 export async function gscSubmitSitemap(feedUrl: string): Promise<{ ok: boolean; error?: string }> {
   if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
   try {
-    const token = await getAccessToken();
     const site = encodeURIComponent(gscSite());
-    const res = await fetch(
-      `https://www.googleapis.com/webmasters/v3/sites/${site}/sitemaps/${encodeURIComponent(feedUrl)}`,
-      { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!res.ok) throw new Error(`Sitemap submit ${res.status}`);
+    await withGscAccess(async () => {
+      const token = await getAccessToken();
+      const res = await fetch(
+        `https://www.googleapis.com/webmasters/v3/sites/${site}/sitemaps/${encodeURIComponent(feedUrl)}`,
+        { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error(`Sitemap submit ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
   }
 }
 
+export type InspectionResult = { ok: true; result: UrlInspection | null } | { ok: false; error: string };
+
 /** URL Inspection API — index status for a single URL. */
-export async function gscInspectUrl(url: string): Promise<UrlInspection | null> {
-  if (!gscConfigured) return null;
+export async function gscInspectUrl(url: string): Promise<InspectionResult> {
+  if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
   try {
-    const data = await googleFetch<{
-      inspectionResult?: {
-        indexStatusResult?: {
-          verdict?: string;
-          coverageState?: string;
-          lastCrawlTime?: string;
-          googleCanonical?: string;
+    const data = await withGscAccess(() =>
+      googleFetch<{
+        inspectionResult?: {
+          indexStatusResult?: {
+            verdict?: string;
+            coverageState?: string;
+            lastCrawlTime?: string;
+            googleCanonical?: string;
+          };
         };
-      };
-    }>("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
-      inspectionUrl: url,
-      siteUrl: gscSite(),
-    });
+      }>("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
+        inspectionUrl: url,
+        siteUrl: gscSite(),
+      })
+    );
     const r = data.inspectionResult?.indexStatusResult;
-    if (!r) return null;
+    if (!r) return { ok: true, result: null };
     return {
-      verdict: r.verdict ?? "VERDICT_UNSPECIFIED",
-      coverageState: r.coverageState ?? "Unknown",
-      lastCrawlTime: r.lastCrawlTime,
-      googleCanonical: r.googleCanonical,
+      ok: true,
+      result: {
+        verdict: r.verdict ?? "VERDICT_UNSPECIFIED",
+        coverageState: r.coverageState ?? "Unknown",
+        lastCrawlTime: r.lastCrawlTime,
+        googleCanonical: r.googleCanonical,
+      },
     };
-  } catch {
-    return null;
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Inspection failed" };
   }
 }

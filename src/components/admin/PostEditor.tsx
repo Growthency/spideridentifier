@@ -98,6 +98,15 @@ function mdToHtml(md: string): string {
 
 const stripTags = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
+/** ISO timestamp → value for a datetime-local input (local time, minutes). */
+function toLocalInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(+d)) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function PostEditor({
   post,
   interlinks = [],
@@ -126,6 +135,7 @@ export function PostEditor({
     level: post?.level ?? "Beginner",
     cover_accent: post?.cover_accent ?? "gold",
     status: post?.status ?? "draft",
+    published_at: toLocalInput(post?.published_at),
     is_featured: post?.is_featured ?? false,
     meta_title: post?.meta_title ?? "",
     meta_description: post?.meta_description ?? "",
@@ -280,11 +290,13 @@ export function PostEditor({
     setError(null);
     const html = htmlMode ? (form.content ?? "") : (editorRef.current?.innerHTML ?? form.content ?? "");
     const words = stripTags(html).split(" ").filter(Boolean).length;
+    const pubDate = form.published_at ? new Date(form.published_at) : null;
     const payload = {
       ...form,
       content: html,
       id: post?.id,
       status,
+      published_at: pubDate && !isNaN(+pubDate) ? pubDate.toISOString() : undefined,
       slug: form.slug?.trim() || slugify(form.title || ""),
       excerpt: (form.excerpt || form.meta_description || stripTags(html).slice(0, 158)).trim(),
       tags: (form.tagsInput || "").split(",").map((t) => t.trim()).filter(Boolean),
@@ -618,6 +630,16 @@ export function PostEditor({
             <p className="text-xs leading-relaxed text-foreground/55">
               Use <strong className="text-foreground/75">Save Draft</strong> to save without publishing, or{" "}
               <strong className="text-emerald-600">Publish</strong> to make it live immediately.
+            </p>
+            <label className="mb-1 mt-3 block text-xs font-medium text-foreground/55">Publish date</label>
+            <input
+              type="datetime-local"
+              className={field}
+              value={form.published_at ?? ""}
+              onChange={(e) => set("published_at", e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-foreground/45">
+              Pick a future time to schedule — the post goes live automatically. Leave empty to publish now.
             </p>
             <label className="mt-3 flex items-center gap-2 text-sm text-foreground/70">
               <input

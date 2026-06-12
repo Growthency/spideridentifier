@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Spider Identifier",
   shortName: "SpiderID",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://spideridentifier.com",
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://spideridentifier.online").replace(/\/+$/, ""),
   tagline: "Identify Any Spider From a Photo — Instantly",
   description:
     "Free AI spider identifier. Upload a photo and identify spider species in seconds — with venom-risk indicators, look-alike alerts, habitat data and expert arachnology guides.",
@@ -14,7 +14,7 @@ export const siteConfig = {
     "spider species finder",
     "what spider is this",
   ],
-  email: "hello@spideridentifier.com",
+  email: "hello@spideridentifier.online",
   stats: [
     { value: "50,000+", label: "Species in dataset" },
     { value: "< 3s", label: "Average identification" },

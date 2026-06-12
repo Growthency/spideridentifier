@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isAdmin } from "@/lib/auth";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
@@ -43,6 +44,13 @@ function friendlyDbError(message: string): string {
     : message;
 }
 
+/** Bust the ISR cache so the change is live immediately, not in an hour. */
+function revalidatePost(slug?: string | null, oldSlug?: string | null) {
+  for (const path of ["/", "/blog", "/sitemap.xml", "/feed.xml"]) revalidatePath(path);
+  if (slug) revalidatePath(`/${slug}`);
+  if (oldSlug && oldSlug !== slug) revalidatePath(`/${oldSlug}`);
+}
+
 export async function POST(req: Request) {
   const blocked = await guard();
   if (blocked) return NextResponse.json({ error: blocked.error }, { status: blocked.status });
@@ -60,6 +68,7 @@ export async function POST(req: Request) {
   const supabase = createAdminClient()!;
   const { data: inserted, error } = await supabase.from("blog_posts").insert(record).select().single();
   if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
+  revalidatePost(record.slug);
   return NextResponse.json({ ok: true, post: inserted });
 }
 
@@ -80,6 +89,7 @@ export async function PUT(req: Request) {
   };
 
   const supabase = createAdminClient()!;
+  const { data: existing } = await supabase.from("blog_posts").select("slug").eq("id", body.id).maybeSingle();
   const { data: updated, error } = await supabase
     .from("blog_posts")
     .update(record)
@@ -87,6 +97,7 @@ export async function PUT(req: Request) {
     .select()
     .single();
   if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
+  revalidatePost(record.slug, existing?.slug);
   return NextResponse.json({ ok: true, post: updated });
 }
 
@@ -99,7 +110,9 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const supabase = createAdminClient()!;
+  const { data: existing } = await supabase.from("blog_posts").select("slug").eq("id", id).maybeSingle();
   const { error } = await supabase.from("blog_posts").delete().eq("id", id);
   if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
+  revalidatePost(existing?.slug);
   return NextResponse.json({ ok: true });
 }

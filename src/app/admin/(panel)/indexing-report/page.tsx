@@ -129,6 +129,7 @@ export default function IndexingReportAdmin() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("");
+  const [noticeKind, setNoticeKind] = useState<"ok" | "error">("ok");
 
   const api = useCallback(async (payload: Record<string, unknown>) => {
     const res = await fetch("/api/admin/indexing", {
@@ -160,7 +161,10 @@ export default function IndexingReportAdmin() {
     if (ok) {
       setRows(json.rows ?? []);
       setScannedAt(json.scanned_at ?? null);
+      setNoticeKind(json.warning ? "error" : "ok");
+      setNotice(json.warning || "Scan complete — every URL inspected with Search Console.");
     } else {
+      setNoticeKind("error");
       setNotice(json.error || "Scan failed");
     }
     setScanning(false);
@@ -170,6 +174,7 @@ export default function IndexingReportAdmin() {
     setBusy(key);
     setNotice("");
     const { ok, json } = await api(payload);
+    setNoticeKind(ok ? "ok" : "error");
     setNotice(ok ? successMsg : json.error || "Request failed");
     if (ok) await load();
     setBusy(null);
@@ -245,7 +250,13 @@ export default function IndexingReportAdmin() {
       )}
 
       {notice && (
-        <p className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3 text-sm text-foreground/80">{notice}</p>
+        <p
+          className={`mb-4 rounded-xl border px-4 py-3 text-sm text-foreground/80 ${
+            noticeKind === "error" ? "border-red-400/30 bg-red-500/8" : "border-emerald-500/25 bg-emerald-500/8"
+          }`}
+        >
+          {notice}
+        </p>
       )}
 
       {/* SEO Boost Tools */}

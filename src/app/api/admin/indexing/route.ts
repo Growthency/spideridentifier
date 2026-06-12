@@ -64,6 +64,20 @@ async function getIndexNowKey(): Promise<string> {
   return key;
 }
 
+/** Translate raw Google API errors into a clear next step for the admin. */
+function friendlyGoogleError(message: string): string {
+  if (/has not been used in project|is disabled/i.test(message)) {
+    return "Enable the “Google Search Console API” for your project in Google Cloud Console, then run the scan again.";
+  }
+  if (/PERMISSION_DENIED|do not own|insufficient permission/i.test(message)) {
+    return "The service account cannot access this Search Console property yet — run the scan again (access is granted automatically), or add the service-account email as an owner in Search Console → Settings → Users.";
+  }
+  if (/quota|RESOURCE_EXHAUSTED|429/i.test(message)) {
+    return "Google's daily URL-inspection quota is used up — try again tomorrow.";
+  }
+  return message;
+}
+
 /** Merge fresh URL list with stored scan rows so timestamps survive. */
 function mergeRows(urls: { url: string; published_at: string | null }[], prev: IndexRow[]): IndexRow[] {
   const prevMap = new Map(prev.map((r) => [r.url, r]));
@@ -100,24 +114,37 @@ export async function POST(req: Request) {
       if (!gscConfigured) return NextResponse.json({ error: "Search Console not configured" }, { status: 503 });
       const [urls, prev] = await Promise.all([allUrls(), loadScan()]);
       const rows = mergeRows(urls, prev.rows);
+      const errors: string[] = [];
       // Inspect in small parallel batches — quota is 600/min, we have ~30 URLs.
       const BATCH = 5;
       for (let i = 0; i < rows.length; i += BATCH) {
         await Promise.all(
           rows.slice(i, i + BATCH).map(async (row) => {
             const r = await gscInspectUrl(row.url);
-            if (r) {
-              row.coverage_state = r.coverageState;
-              row.verdict = r.verdict;
-              row.last_crawl_time = r.lastCrawlTime ?? null;
+            if (r.ok && r.result) {
+              row.coverage_state = r.result.coverageState;
+              row.verdict = r.result.verdict;
+              row.last_crawl_time = r.result.lastCrawlTime ?? null;
               row.checked_at = now;
+            } else if (!r.ok) {
+              errors.push(r.error);
             }
           })
         );
       }
+      const checkedNow = rows.filter((r) => r.checked_at === now).length;
+      // Every inspection failed — report the cause instead of saving an empty scan.
+      if (checkedNow === 0 && errors.length > 0) {
+        return NextResponse.json({ error: friendlyGoogleError(errors[0]) }, { status: 502 });
+      }
       const scan: IndexingScan = { scanned_at: now, rows };
       await saveScan(scan);
-      return NextResponse.json({ scanned_at: now, rows, gscConfigured });
+      return NextResponse.json({
+        scanned_at: now,
+        rows,
+        gscConfigured,
+        warning: errors.length > 0 ? `${errors.length} URL${errors.length > 1 ? "s" : ""} could not be inspected — ${friendlyGoogleError(errors[0])}` : undefined,
+      });
     }
 
     if (action === "request-index" || action === "bulk-request") {
