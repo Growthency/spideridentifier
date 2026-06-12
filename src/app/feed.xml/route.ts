@@ -14,8 +14,8 @@ export async function GET() {
     .map(
       (p) => `    <item>
       <title>${esc(p.title)}</title>
-      <link>${siteConfig.url}/blog/${p.slug}</link>
-      <guid isPermaLink="true">${siteConfig.url}/blog/${p.slug}</guid>
+      <link>${siteConfig.url}/${p.slug}</link>
+      <guid isPermaLink="true">${siteConfig.url}/${p.slug}</guid>
       <description>${esc(p.excerpt)}</description>
       <category>${esc(p.category)}</category>
       <pubDate>${new Date(p.published_at).toUTCString()}</pubDate>

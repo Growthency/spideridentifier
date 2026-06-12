@@ -39,7 +39,7 @@ export function SaveArticleButton({ slug }: { slug: string }) {
 
   async function toggle() {
     if (!signedIn) {
-      router.push(`/login?next=/blog/${slug}`);
+      router.push(`/login?next=/${slug}`);
       return;
     }
     setBusy(true);

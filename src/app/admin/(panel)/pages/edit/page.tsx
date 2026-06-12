@@ -8,13 +8,20 @@ import type { BlogPost } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+/** Clean edit URL: /admin/pages/edit?slug=<post-slug> (id also accepted). */
+export default async function EditPostPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ slug?: string; id?: string }>;
+}) {
+  const { slug, id } = await searchParams;
   const supabase = createAdminClient();
-  if (!supabase) notFound();
+  if (!supabase || (!slug && !id)) notFound();
 
+  let query = supabase.from("blog_posts").select("*");
+  query = slug ? query.eq("slug", slug) : query.eq("id", id);
   const [{ data }, posts, species, options] = await Promise.all([
-    supabase.from("blog_posts").select("*").eq("id", id).maybeSingle(),
+    query.maybeSingle(),
     getBlogPosts(),
     getSpecies(),
     getSiteContent<EditorOptions>("editor_options", DEFAULT_EDITOR_OPTIONS),
@@ -23,7 +30,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
 
   const interlinks: InterlinkCandidate[] = [
     ...species.map((s) => ({ phrase: s.common_name, href: `/species/${s.slug}` })),
-    ...posts.map((p) => ({ phrase: p.title.split(":")[0]?.trim() ?? p.title, href: `/blog/${p.slug}` })),
+    ...posts.map((p) => ({ phrase: p.title.split(":")[0]?.trim() ?? p.title, href: `/${p.slug}` })),
   ];
 
   return <PostEditor post={data as BlogPost} interlinks={interlinks} options={{ ...DEFAULT_EDITOR_OPTIONS, ...options }} />;

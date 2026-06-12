@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -21,12 +22,30 @@ export function UserMenu() {
       setReady(true);
       return;
     }
+    const loadProfile = async (id: string) => {
+      const { data } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", id).maybeSingle();
+      if (data) setProfile(data);
+    };
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
       setReady(true);
+      if (data.user) loadProfile(data.user.id);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
-    return () => sub.subscription.unsubscribe();
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+      else setProfile(null);
+    });
+    // Settings broadcasts avatar/name changes — refresh instantly.
+    const onProfileUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { full_name?: string; avatar_url?: string };
+      setProfile((p) => ({ full_name: detail.full_name ?? p?.full_name ?? null, avatar_url: detail.avatar_url ?? p?.avatar_url ?? null }));
+    };
+    window.addEventListener("profile-updated", onProfileUpdated);
+    return () => {
+      sub.subscription.unsubscribe();
+      window.removeEventListener("profile-updated", onProfileUpdated);
+    };
   }, []);
 
   useEffect(() => {
@@ -58,9 +77,10 @@ export function UserMenu() {
     );
   }
 
-  const name = (user.user_metadata?.full_name as string) || user.email || "User";
+  const name = profile?.full_name || (user.user_metadata?.full_name as string) || user.email || "User";
   const initial = name.trim().charAt(0).toUpperCase();
-  const avatar = user.user_metadata?.avatar_url as string | undefined;
+  // Uploaded profile photo wins; OAuth picture is the fallback.
+  const avatar = profile?.avatar_url || (user.user_metadata?.avatar_url as string | undefined);
 
   const item = "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors";
 

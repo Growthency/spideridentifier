@@ -342,7 +342,8 @@ alter table public.blog_posts add column if not exists author_avatar text;
 -- Rich editor fields (mushroom-parity page builder).
 alter table public.blog_posts add column if not exists featured_image text;
 alter table public.blog_posts add column if not exists access_type text not null default 'free';
-alter table public.blog_posts add column if not exists layout text not null default 'full';
+alter table public.blog_posts add column if not exists layout text not null default 'sidebar';
+alter table public.blog_posts alter column layout set default 'sidebar';
 alter table public.blog_posts add column if not exists custom_css text;
 alter table public.blog_posts add column if not exists custom_schema text;
 

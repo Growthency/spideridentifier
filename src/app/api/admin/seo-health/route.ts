@@ -48,7 +48,7 @@ async function allPaths(): Promise<string[]> {
   const [posts, species] = await Promise.all([getBlogPosts(), getSpecies()]);
   return [
     ...STATIC_ROUTES.map((p) => p || "/"),
-    ...posts.map((p) => `/blog/${p.slug}`),
+    ...posts.map((p) => `/${p.slug}`),
     ...species.map((s) => `/species/${s.slug}`),
   ];
 }
