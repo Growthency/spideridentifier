@@ -53,9 +53,10 @@ export const metadata: Metadata = {
     },
   },
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
-  ...(process.env.GOOGLE_SITE_VERIFICATION
-    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
-    : {}),
+  // Search Console ownership proof — public by design, env var overrides.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || "2WI2zdSsYSCEP0bS5a9VB3TrIfadrnlljH7yDR54yH4",
+  },
 };
 
 export const viewport: Viewport = {
