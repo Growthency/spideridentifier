@@ -53,6 +53,21 @@ export const DEFAULT_HOMEPAGE: HomepageContent = {
   cta_secondary: "Browse species",
 };
 
+/** Dropdown options in the post editor — admin can add/remove entries. */
+export interface EditorOptions {
+  categories: string[];
+  levels: string[];
+  regions: string[];
+  cover_accents: string[];
+}
+
+export const DEFAULT_EDITOR_OPTIONS: EditorOptions = {
+  categories: ["Species Guide", "Identification", "Safety", "Behavior", "Photography", "Comparison Guide", "Educational"],
+  levels: ["Beginner", "Intermediate", "Advanced"],
+  regions: ["Worldwide", "North America", "South America", "Europe", "Asia", "Africa", "Australia"],
+  cover_accents: ["gold", "crimson", "dual"],
+};
+
 /** Override CSS for non-default theme colors (brand gradient + accents). */
 export function themeOverrideCss(t: ThemeColors): string {
   if (t.accentA === DEFAULT_THEME.accentA && t.accentB === DEFAULT_THEME.accentB && t.accentC === DEFAULT_THEME.accentC) {

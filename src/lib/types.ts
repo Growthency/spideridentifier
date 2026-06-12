@@ -30,8 +30,8 @@ export interface BlogPost {
   author_avatar?: string | null; // photo URL — bundled default avatar when empty
   read_time: number; // minutes
   region: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
-  cover_accent: "gold" | "crimson" | "dual";
+  level: string; // admin-managed option list
+  cover_accent: string; // renderer falls back to gold for unknown values
   status: "draft" | "published";
   is_featured: boolean;
   published_at: string; // ISO
