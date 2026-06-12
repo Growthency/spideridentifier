@@ -24,6 +24,7 @@ export function PostEditor({ post }: { post?: BlogPost }) {
     tagsInput: post?.tags?.join(", ") ?? "",
     author_name: post?.author_name ?? "Dr. Elena Marsh",
     author_role: post?.author_role ?? "Arachnologist",
+    author_avatar: post?.author_avatar ?? "",
     read_time: post?.read_time ?? 5,
     region: post?.region ?? "Worldwide",
     level: post?.level ?? "Beginner",
@@ -36,9 +37,41 @@ export function PostEditor({ post }: { post?: BlogPost }) {
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const set = (k: keyof Draft, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Some failures (413 too large, deploy window) return HTML — surface the
+  // status instead of a cryptic JSON parse error.
+  async function readJson(res: Response): Promise<Record<string, unknown>> {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Server returned ${res.status}${res.status === 413 ? " — file too large" : ""}. Try again in a moment.`);
+    }
+  }
+
+  async function uploadAvatar(file?: File | null) {
+    if (!file) return;
+    setAvatarUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await readJson(res);
+      if (!res.ok) throw new Error(String(json.error || "Upload failed"));
+      set("author_avatar", json.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setAvatarUploading(false);
+      if (avatarRef.current) avatarRef.current.value = "";
+    }
+  }
 
   async function uploadImage(file?: File | null) {
     if (!file) return;
@@ -48,8 +81,8 @@ export function PostEditor({ post }: { post?: BlogPost }) {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Upload failed");
+      const json = await readJson(res);
+      if (!res.ok) throw new Error(String(json.error || "Upload failed"));
       // Insert WebP image markdown at the end of the content.
       set("content", `${form.content ?? ""}\n\n![${file.name.replace(/\.[^.]+$/, "")}](${json.url})\n`);
     } catch (e) {
@@ -72,13 +105,13 @@ export function PostEditor({ post }: { post?: BlogPost }) {
     };
     delete (payload as Draft).tagsInput;
     try {
-      const res = await fetch("/api/admin/pages", {
+      const res = await fetch("/api/admin/posts", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Could not save");
+      const json = await readJson(res);
+      if (!res.ok) throw new Error(String(json.error || "Could not save"));
       router.push("/admin/pages");
       router.refresh();
     } catch (e) {
@@ -246,6 +279,44 @@ export function PostEditor({ post }: { post?: BlogPost }) {
             <div>
               <label className={label}>Author role</label>
               <input className={field} value={form.author_role} onChange={(e) => set("author_role", e.target.value)} />
+            </div>
+            <div>
+              <label className={label}>Author photo</label>
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.author_avatar || "/images/authors/default-avatar.svg"}
+                  alt="Author avatar"
+                  className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-foreground/10"
+                />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <input
+                    className={field}
+                    value={form.author_avatar ?? ""}
+                    onChange={(e) => set("author_avatar", e.target.value)}
+                    placeholder="Photo URL (or upload below)"
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={avatarRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => uploadAvatar(e.target.files?.[0])}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarRef.current?.click()}
+                      disabled={avatarUploading}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-foreground/12 px-3 text-xs font-medium text-foreground/70 hover:bg-foreground/5 disabled:opacity-60"
+                    >
+                      {avatarUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                      Upload photo
+                    </button>
+                    <span className="text-[11px] text-foreground/40">Empty = default avatar</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

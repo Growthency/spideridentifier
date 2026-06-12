@@ -27,6 +27,7 @@ export interface BlogPost {
   tags: string[];
   author_name: string;
   author_role: string;
+  author_avatar?: string | null; // photo URL — bundled default avatar when empty
   read_time: number; // minutes
   region: string;
   level: "Beginner" | "Intermediate" | "Advanced";

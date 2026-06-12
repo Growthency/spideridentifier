@@ -44,11 +44,14 @@ export function SaveArticleButton({ slug }: { slug: string }) {
     }
     setBusy(true);
     if (saved) {
-      await supabase.from("favorites").delete().eq("user_id", userId).eq("post_slug", slug);
-      setSaved(false);
+      const { error } = await supabase.from("favorites").delete().eq("user_id", userId).eq("post_slug", slug);
+      if (!error) setSaved(false);
+      else alert(`Could not remove: ${error.message}`);
     } else {
-      await supabase.from("favorites").insert({ user_id: userId, post_slug: slug });
-      setSaved(true);
+      const { error } = await supabase.from("favorites").insert({ user_id: userId, post_slug: slug });
+      if (!error) setSaved(true);
+      else if (/duplicate key/i.test(error.message)) setSaved(true);
+      else alert(`Could not save: ${error.message}`);
     }
     setBusy(false);
   }
