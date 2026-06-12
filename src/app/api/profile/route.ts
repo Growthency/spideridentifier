@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import { ensureProfile } from "@/lib/ensureProfile";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -19,6 +20,9 @@ export async function POST(req: Request) {
     const fullName = typeof body.full_name === "string" ? body.full_name.trim().slice(0, 80) : null;
     if (!fullName) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
+    // Heal a missing profile row first — UPDATE on zero rows silently
+    // discards the change.
+    await ensureProfile(user);
     const { error } = await admin.from("profiles").update({ full_name: fullName }).eq("id", user.id);
     if (error) throw error;
     return NextResponse.json({ ok: true, full_name: fullName });

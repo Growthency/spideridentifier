@@ -4,6 +4,7 @@ import { toWebp } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { uploadToBucket } from "@/lib/storageUpload";
+import { ensureProfile } from "@/lib/ensureProfile";
 
 export const runtime = "nodejs";
 
@@ -29,7 +30,11 @@ export async function POST(req: Request) {
     const admin = createAdminClient()!;
     const path = `avatars/${user.id}/${randomUUID()}.webp`;
     const url = await uploadToBucket(admin, "scans", path, webp, { contentType: "image/webp", upsert: true });
-    await admin.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+    // Heal a missing profile row first — UPDATE on zero rows is a silent
+    // no-op, which is exactly how avatars used to vanish on reload.
+    await ensureProfile(user);
+    const { error } = await admin.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+    if (error) throw error;
     return NextResponse.json({ url });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Upload failed" }, { status: 500 });
