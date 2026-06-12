@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     const input = Buffer.from(await file.arrayBuffer());
     const webp = await toWebp(input, { maxWidth: 1024, quality: 80 });
 
-    // Claude vision
+    // AI vision model call
     const anthropic = new Anthropic({ apiKey });
     const model = plan === "free" ? "claude-haiku-4-5-20251001" : "claude-sonnet-4-6";
     const msg = await anthropic.messages.create({

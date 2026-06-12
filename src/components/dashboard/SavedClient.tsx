@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bookmark, ChevronLeft, ChevronRight, Heart, Trash2 } from "lucide-react";
 import { BlogMedia } from "@/components/ui/BlogMedia";
-import { createClient } from "@/lib/supabase/client";
 
 export interface SavedArticle {
   id: string;
@@ -24,13 +23,18 @@ export function SavedClient({ initial }: { initial: SavedArticle[] }) {
   const [page, setPage] = useState(1);
   const [removing, setRemoving] = useState<string | null>(null);
 
-  const handleRemove = async (id: string) => {
-    const supabase = createClient();
-    if (!supabase) return;
+  const handleRemove = async (id: string, slug: string) => {
     setRemoving(id);
-    await supabase.from("favorites").delete().eq("id", id);
-    setArticles((prev) => prev.filter((a) => a.id !== id));
-    setRemoving(null);
+    try {
+      await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } finally {
+      setRemoving(null);
+    }
   };
 
   const totalPages = Math.ceil(articles.length / PER_PAGE);
@@ -100,7 +104,7 @@ export function SavedClient({ initial }: { initial: SavedArticle[] }) {
                     {new Date(article.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </span>
                   <button
-                    onClick={() => handleRemove(article.id)}
+                    onClick={() => handleRemove(article.id, article.slug)}
                     disabled={removing === article.id}
                     className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
                     title="Remove from saved"

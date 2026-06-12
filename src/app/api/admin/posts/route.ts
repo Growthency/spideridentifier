@@ -36,6 +36,13 @@ async function guard() {
   return null;
 }
 
+/** Map raw database errors to a clear one-time setup instruction. */
+function friendlyDbError(message: string): string {
+  return /schema cache|does not exist/i.test(message)
+    ? "Database setup incomplete — run supabase/00-run-everything.sql in the Supabase SQL Editor once, then publish again."
+    : message;
+}
+
 export async function POST(req: Request) {
   const blocked = await guard();
   if (blocked) return NextResponse.json({ error: blocked.error }, { status: blocked.status });
@@ -52,7 +59,7 @@ export async function POST(req: Request) {
 
   const supabase = createAdminClient()!;
   const { data: inserted, error } = await supabase.from("blog_posts").insert(record).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
   return NextResponse.json({ ok: true, post: inserted });
 }
 
@@ -79,7 +86,7 @@ export async function PUT(req: Request) {
     .eq("id", body.id)
     .select()
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
   return NextResponse.json({ ok: true, post: updated });
 }
 
@@ -93,6 +100,6 @@ export async function DELETE(req: Request) {
 
   const supabase = createAdminClient()!;
   const { error } = await supabase.from("blog_posts").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: friendlyDbError(error.message) }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

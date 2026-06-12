@@ -21,6 +21,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { dialogAlert } from "@/components/ui/Dialog";
 import type { Profile } from "@/lib/types";
 
 const NAV = [
@@ -105,10 +106,10 @@ export function DashboardShell({
       if (res.ok && json.url) {
         window.location.href = json.url;
       } else {
-        alert(json.error || "Could not open subscription portal. Try again in a moment.");
+        dialogAlert(json.error || "Could not open subscription portal. Try again in a moment.", "Subscription");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Could not open subscription portal.");
+      dialogAlert(err instanceof Error ? err.message : "Could not open subscription portal.", "Subscription");
     }
   }
 
