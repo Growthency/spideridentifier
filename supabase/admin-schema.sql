@@ -50,6 +50,13 @@ create table if not exists public.external_link_rules (
 -- Author avatar on posts (photo URL — falls back to the bundled default).
 alter table public.blog_posts add column if not exists author_avatar text;
 
+-- Rich editor fields (mushroom-parity page builder).
+alter table public.blog_posts add column if not exists featured_image text;
+alter table public.blog_posts add column if not exists access_type text not null default 'free';
+alter table public.blog_posts add column if not exists layout text not null default 'full';
+alter table public.blog_posts add column if not exists custom_css text;
+alter table public.blog_posts add column if not exists custom_schema text;
+
 -- Reader comments on blog posts. Written ONLY via the server route
 -- (signed-in users); public read.
 create table if not exists public.comments (

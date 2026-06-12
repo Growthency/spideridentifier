@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
  */
 export function BlogMedia({
   slug,
+  src,
   accent = "gold",
   alt,
   className,
@@ -19,6 +20,8 @@ export function BlogMedia({
   priority = false,
 }: {
   slug: string;
+  /** Explicit cover URL (admin "Featured Image") — overrides the slug photo. */
+  src?: string;
   accent?: "gold" | "crimson";
   alt: string;
   className?: string;
@@ -32,7 +35,7 @@ export function BlogMedia({
       <SpeciesArt accent={accent} className="absolute inset-0 h-full w-full" />
       {showPhoto && (
         <Image
-          src={`/images/blog/${slug}.webp`}
+          src={src || `/images/blog/${slug}.webp`}
           alt={alt}
           fill
           sizes={sizes}

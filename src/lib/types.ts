@@ -37,6 +37,11 @@ export interface BlogPost {
   published_at: string; // ISO
   meta_title?: string;
   meta_description?: string;
+  featured_image?: string | null; // cover URL — slug-based bundled photo when empty
+  access_type?: "free" | "premium";
+  layout?: "full" | "sidebar";
+  custom_css?: string | null; // per-page CSS, loaded after global styles
+  custom_schema?: string | null; // JSON-LD that replaces the default Article schema
 }
 
 export interface Profile {

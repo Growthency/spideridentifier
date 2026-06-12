@@ -7,6 +7,7 @@ import { Markdown } from "@/components/blog/Markdown";
 import { SaveArticleButton } from "@/components/blog/SaveArticleButton";
 import { Comments } from "@/components/blog/Comments";
 import { ViewCounter } from "@/components/blog/ViewCounter";
+import { PremiumGate } from "@/components/blog/PremiumGate";
 import { BlogMedia } from "@/components/ui/BlogMedia";
 import { BlogCard } from "@/components/ui/BlogCard";
 import { blogPhotoCredits } from "@/content/blogPhotoCredits";
@@ -68,6 +69,37 @@ export async function generateMetadata({
   };
 }
 
+/** Page-specific JSON-LD: the admin's custom schema replaces the default. */
+function articleSchema(post: NonNullable<Awaited<ReturnType<typeof getBlogPost>>>): object {
+  if (post.custom_schema?.trim()) {
+    try {
+      return JSON.parse(post.custom_schema);
+    } catch {
+      // invalid JSON in the editor — fall back to the default Article schema
+    }
+  }
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    image: `${siteConfig.url}/og/blog/${post.slug}`,
+    datePublished: post.published_at,
+    dateModified: post.published_at,
+    author: { "@type": "Person", name: post.author_name, jobTitle: post.author_role },
+    publisher: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      logo: { "@type": "ImageObject", url: `${siteConfig.url}/icon.svg` },
+    },
+    url: `${siteConfig.url}/blog/${post.slug}`,
+    mainEntityOfPage: `${siteConfig.url}/blog/${post.slug}`,
+    articleSection: post.category,
+    keywords: post.tags.join(", "),
+    timeRequired: `PT${post.read_time}M`,
+  };
+}
+
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getBlogPost(slug);
@@ -75,31 +107,40 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const [related, linkRules] = await Promise.all([getRelatedPosts(slug, 3), getExternalLinkRules()]);
   const accent = post.cover_accent === "crimson" ? "crimson" : "gold";
+  const withSidebar = post.layout === "sidebar";
+
+  const body = (
+    <>
+      <Markdown content={post.content} linkRules={linkRules} />
+
+      {/* tags */}
+      {post.tags.length > 0 && (
+        <div className="mt-10 flex flex-wrap gap-2">
+          {post.tags.map((t) => (
+            <span key={t} className="rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1 text-xs text-foreground/70">
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* inline CTA */}
+      <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 to-crimson/10 p-8 text-center">
+        <h3 className="font-display text-xl font-bold">Found a spider like this?</h3>
+        <p className="max-w-md text-sm text-foreground/65">
+          Upload a photo and confirm the species in seconds — with a venom-risk indicator.
+        </p>
+        <Button href="/#identify" size="lg">
+          <ScanSearch className="h-5 w-5" /> Identify a Spider Free
+        </Button>
+      </div>
+    </>
+  );
 
   return (
     <>
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "BlogPosting",
-          headline: post.title,
-          description: post.excerpt,
-          image: `${siteConfig.url}/og/blog/${post.slug}`,
-          datePublished: post.published_at,
-          dateModified: post.published_at,
-          author: { "@type": "Person", name: post.author_name, jobTitle: post.author_role },
-          publisher: {
-            "@type": "Organization",
-            name: siteConfig.name,
-            logo: { "@type": "ImageObject", url: `${siteConfig.url}/icon.svg` },
-          },
-          url: `${siteConfig.url}/blog/${post.slug}`,
-          mainEntityOfPage: `${siteConfig.url}/blog/${post.slug}`,
-          articleSection: post.category,
-          keywords: post.tags.join(", "),
-          timeRequired: `PT${post.read_time}M`,
-        }}
-      />
+      {post.custom_css?.trim() && <style dangerouslySetInnerHTML={{ __html: post.custom_css }} />}
+      <JsonLd data={articleSchema(post)} />
       <JsonLd data={breadcrumbSchema([{ name: "Blog", path: "/blog" }, { name: post.title, path: `/blog/${post.slug}` }])} />
 
       <PageHero eyebrow={post.category} title={post.title} subtitle={post.excerpt}>
@@ -139,6 +180,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="gradient-border mb-2 overflow-hidden rounded-4xl p-1.5">
             <BlogMedia
               slug={post.slug}
+              src={post.featured_image || undefined}
               accent={accent}
               alt={post.title}
               className="h-56 w-full rounded-[1.85rem] sm:h-80"
@@ -156,31 +198,34 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </p>
           )}
 
-          <div className="mx-auto max-w-3xl">
-            <Markdown content={post.content} linkRules={linkRules} />
-
-            {/* tags */}
-            {post.tags.length > 0 && (
-              <div className="mt-10 flex flex-wrap gap-2">
-                {post.tags.map((t) => (
-                  <span key={t} className="rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1 text-xs text-foreground/70">
-                    #{t}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* inline CTA */}
-            <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 to-crimson/10 p-8 text-center">
-              <h3 className="font-display text-xl font-bold">Found a spider like this?</h3>
-              <p className="max-w-md text-sm text-foreground/65">
-                Upload a photo and confirm the species in seconds — with a venom-risk indicator.
-              </p>
-              <Button href="/#identify" size="lg">
-                <ScanSearch className="h-5 w-5" /> Identify a Spider Free
-              </Button>
+          {withSidebar ? (
+            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_280px]">
+              <div className="min-w-0">{post.access_type === "premium" ? <PremiumGate>{body}</PremiumGate> : body}</div>
+              <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
+                <div className="rounded-3xl border border-foreground/8 bg-card/60 p-5">
+                  <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-wide text-foreground/60">Recent guides</h3>
+                  <ul className="space-y-3">
+                    {related.map((p) => (
+                      <li key={p.slug}>
+                        <Link href={`/blog/${p.slug}`} className="block text-sm font-medium leading-snug text-foreground/80 transition-colors hover:text-gold">
+                          {p.title}
+                        </Link>
+                        <span className="text-[11px] text-foreground/40">{p.read_time} min read</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 to-crimson/10 p-5 text-center">
+                  <p className="mb-3 font-display text-sm font-bold text-foreground">Identify a spider from a photo</p>
+                  <Button href="/#identify" size="sm" className="w-full">
+                    <ScanSearch className="h-4 w-4" /> Try it free
+                  </Button>
+                </div>
+              </aside>
             </div>
-          </div>
+          ) : (
+            <div className="mx-auto max-w-3xl">{post.access_type === "premium" ? <PremiumGate>{body}</PremiumGate> : body}</div>
+          )}
 
           {/* comments */}
           <Comments slug={post.slug} />
