@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser, getProfile } from "@/lib/auth";
+import { ensureProfile } from "@/lib/ensureProfile";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /** Post a comment on an article — signed-in users only, written server-side. */
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Comment must be 2–2000 characters" }, { status: 400 });
     }
 
+    await ensureProfile(user);
     const profile = await getProfile();
     const author = profile?.full_name?.trim() || user.email?.split("@")[0] || "Reader";
 

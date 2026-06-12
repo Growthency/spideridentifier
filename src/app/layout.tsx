@@ -5,6 +5,7 @@ import { siteConfig } from "@/lib/site";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { Analytics } from "@/components/seo/Analytics";
 import { RawScripts } from "@/components/seo/RawScripts";
+import { DialogHost } from "@/components/ui/Dialog";
 import { getSiteChromeData } from "@/lib/siteContent";
 import { themeOverrideCss } from "@/lib/siteDefaults";
 import { BackdropGlobs } from "@/components/fx/BackdropGlobs";
@@ -107,6 +108,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </SiteChrome>
         </ThemeProvider>
+        <DialogHost />
         <Analytics />
       </body>
     </html>

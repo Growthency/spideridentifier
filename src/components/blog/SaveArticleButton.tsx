@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { dialogAlert } from "@/components/ui/Dialog";
 
 /**
  * Heart toggle on blog articles — saves the post to the user's dashboard
- * "Saved Articles". Guests are sent to login first.
+ * "Saved Articles". Writes go through the server so a missing profile row
+ * is healed automatically; guests are sent to login first.
  */
 export function SaveArticleButton({ slug }: { slug: string }) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -23,7 +25,7 @@ export function SaveArticleButton({ slug }: { slug: string }) {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      setUserId(user.id);
+      setSignedIn(true);
       const { data } = await supabase
         .from("favorites")
         .select("id")
@@ -36,24 +38,31 @@ export function SaveArticleButton({ slug }: { slug: string }) {
   }, [slug]);
 
   async function toggle() {
-    const supabase = createClient();
-    if (!supabase) return;
-    if (!userId) {
+    if (!signedIn) {
       router.push(`/login?next=/blog/${slug}`);
       return;
     }
     setBusy(true);
-    if (saved) {
-      const { error } = await supabase.from("favorites").delete().eq("user_id", userId).eq("post_slug", slug);
-      if (!error) setSaved(false);
-      else alert(`Could not remove: ${error.message}`);
-    } else {
-      const { error } = await supabase.from("favorites").insert({ user_id: userId, post_slug: slug });
-      if (!error) setSaved(true);
-      else if (/duplicate key/i.test(error.message)) setSaved(true);
-      else alert(`Could not save: ${error.message}`);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const text = await res.text();
+      let json: { saved?: boolean; error?: string };
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Server returned ${res.status} — please try again`);
+      }
+      if (!res.ok) throw new Error(json.error || "Could not save");
+      setSaved(Boolean(json.saved));
+    } catch (e) {
+      dialogAlert(e instanceof Error ? e.message : "Could not save", "Saved articles");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (

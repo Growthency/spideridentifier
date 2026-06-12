@@ -34,6 +34,7 @@ import type { BlogPost } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
 import { DEFAULT_EDITOR_OPTIONS, type EditorOptions } from "@/lib/siteDefaults";
+import { dialogConfirm, dialogPrompt } from "@/components/ui/Dialog";
 
 export interface InterlinkCandidate {
   phrase: string;
@@ -160,18 +161,18 @@ export function PostEditor({
     }
   }
 
-  function addOption(listKey: keyof EditorOptions, formKey: keyof Draft) {
-    const v = window.prompt("Add new option")?.trim();
+  async function addOption(listKey: keyof EditorOptions, formKey: keyof Draft) {
+    const v = (await dialogPrompt("Add new option"))?.trim();
     if (!v) return;
     const list = options[listKey];
     if (!list.includes(v)) saveOptions({ ...options, [listKey]: [...list, v] });
     set(formKey, v);
   }
 
-  function removeOption(listKey: keyof EditorOptions, formKey: keyof Draft, current: string) {
+  async function removeOption(listKey: keyof EditorOptions, formKey: keyof Draft, current: string) {
     const list = options[listKey];
     if (list.length <= 1) return;
-    if (!window.confirm(`Remove "${current}" from the list? Existing posts keep their value.`)) return;
+    if (!(await dialogConfirm(`Remove "${current}" from the list? Existing posts keep their value.`, "Remove option"))) return;
     const next = list.filter((o) => o !== current);
     saveOptions({ ...options, [listKey]: next });
     set(formKey, next[0]);
@@ -441,7 +442,7 @@ export function PostEditor({
             <p className={cardTitle}>Permalink</p>
             <div className="flex items-center overflow-hidden rounded-xl border border-foreground/10 bg-foreground/5">
               <span className="shrink-0 border-r border-foreground/10 px-3.5 py-2.5 text-sm text-foreground/45">
-                {new URL(siteConfig.url).hostname}/blog/
+                {new URL(siteConfig.url).hostname}/
               </span>
               <input
                 className="w-full bg-transparent px-3 py-2.5 text-sm text-foreground focus:outline-none"
@@ -554,8 +555,8 @@ export function PostEditor({
               <Divider />
               <ToolBtn
                 title="Insert link"
-                onClick={() => {
-                  const url = window.prompt("Link URL");
+                onClick={async () => {
+                  const url = await dialogPrompt("Link URL");
                   if (url) exec("createLink", url);
                 }}
               >
@@ -563,8 +564,8 @@ export function PostEditor({
               </ToolBtn>
               <ToolBtn
                 title="Image by URL"
-                onClick={() => {
-                  const url = window.prompt("Image URL");
+                onClick={async () => {
+                  const url = await dialogPrompt("Image URL");
                   if (url) exec("insertHTML", `<img src="${url}" alt="" />`);
                 }}
               >

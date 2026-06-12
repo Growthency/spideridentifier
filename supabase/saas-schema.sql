@@ -55,6 +55,15 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Backfill: accounts created BEFORE the trigger existed have no profile
+-- row, which breaks favorites/comments/analyses foreign keys. Heal them.
+insert into public.profiles (id, email, full_name)
+select u.id, u.email, u.raw_user_meta_data->>'full_name'
+from auth.users u
+left join public.profiles p on p.id = u.id
+where p.id is null
+on conflict (id) do nothing;
+
 -- ----------------------------------------------------------------------------
 -- ANALYSES  — each identification result (logged-in or guest)
 -- ----------------------------------------------------------------------------
