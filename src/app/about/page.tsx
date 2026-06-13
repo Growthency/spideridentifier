@@ -24,8 +24,7 @@ const values = [
 ];
 
 const team = [
-  { name: "Dr. Elena Marsh", role: "Lead Arachnologist", bio: "Two decades studying spider taxonomy and venom, now translating that expertise into models anyone can use." },
-  { name: "Marcus Webb", role: "Field Naturalist", bio: "Wildlife photographer and educator who has documented spiders on five continents." },
+  { name: "Marcus Webb", role: "Spider Researcher", bio: "Field researcher and educator who has documented spiders on five continents — every guide is checked against real arachnology before it ships." },
   { name: "Priya Nair", role: "Computer Vision Lead", bio: "Builds the detection and classification pipeline that turns a single photo into a confident match." },
 ];
 
