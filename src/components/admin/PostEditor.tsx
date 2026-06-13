@@ -731,7 +731,7 @@ export function PostEditor({
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={form.author_avatar || "/images/authors/default-avatar.svg"}
+                src={form.author_avatar || "/images/authors/default-author.webp"}
                 alt="Author"
                 className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-foreground/10"
               />

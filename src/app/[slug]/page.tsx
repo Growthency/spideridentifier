@@ -41,7 +41,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    alternates: { canonical: `/${post.slug}` },
+    alternates: {
+      canonical: `/${post.slug}`,
+      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${siteConfig.name} — Articles` }] },
+    },
     openGraph: {
       type: "article",
       siteName: siteConfig.name,
@@ -173,7 +176,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={post.author_avatar || "/images/authors/default-avatar.svg"}
+            src={post.author_avatar || "/images/authors/default-author.webp"}
             alt={post.author_name}
             className="h-12 w-12 rounded-full object-cover ring-2 ring-gold/30"
           />

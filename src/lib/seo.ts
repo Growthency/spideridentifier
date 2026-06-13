@@ -29,7 +29,10 @@ export function pageMetadata({
   const meta: Metadata = {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: {
+      canonical: path,
+      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${siteConfig.name} — Articles` }] },
+    },
     openGraph: {
       type: "website",
       siteName: siteConfig.name,

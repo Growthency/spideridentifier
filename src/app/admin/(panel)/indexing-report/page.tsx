@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   Radio,
+  ExternalLink,
 } from "lucide-react";
 
 interface IndexRow {
@@ -126,10 +127,11 @@ export default function IndexingReportAdmin() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [toolsOpen, setToolsOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(true);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("");
   const [noticeKind, setNoticeKind] = useState<"ok" | "error">("ok");
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const api = useCallback(async (payload: Record<string, unknown>) => {
     const res = await fetch("/api/admin/indexing", {
@@ -154,18 +156,53 @@ export default function IndexingReportAdmin() {
     load();
   }, [load]);
 
+  /** Batched scan so the progress bar moves live, mushroom-style. */
   async function runScan() {
     setScanning(true);
     setNotice("");
-    const { ok, json } = await api({ action: "scan" });
-    if (ok) {
-      setRows(json.rows ?? []);
-      setScannedAt(json.scanned_at ?? null);
-      setNoticeKind(json.warning ? "error" : "ok");
-      setNotice(json.warning || "Scan complete — every URL inspected with Search Console.");
-    } else {
+    const next = rows.map((r) => ({ ...r }));
+    const urls = next.map((r) => r.url);
+    const BATCH = 5;
+    const errors: string[] = [];
+    let okCount = 0;
+    setProgress({ done: 0, total: urls.length });
+
+    for (let i = 0; i < urls.length; i += BATCH) {
+      const batch = urls.slice(i, i + BATCH);
+      const { ok, json } = await api({ action: "scan-batch", urls: batch });
+      if (ok) {
+        for (const res of json.results ?? []) {
+          if (res.error) {
+            errors.push(res.error);
+            continue;
+          }
+          if (!res.checked_at) continue;
+          const idx = next.findIndex((r) => r.url === res.url);
+          if (idx >= 0) {
+            next[idx] = { ...next[idx], coverage_state: res.coverage_state ?? null, verdict: res.verdict ?? null, last_crawl_time: res.last_crawl_time ?? null, checked_at: res.checked_at };
+            okCount++;
+          }
+        }
+        setRows(next.map((r) => ({ ...r })));
+      } else {
+        errors.push(json.error || "Batch failed");
+      }
+      setProgress({ done: Math.min(i + BATCH, urls.length), total: urls.length });
+    }
+
+    const fin = await api({ action: "scan-finish" });
+    if (fin.ok) setScannedAt(fin.json.scanned_at ?? null);
+    setProgress(null);
+
+    if (okCount === 0 && errors.length > 0) {
       setNoticeKind("error");
-      setNotice(json.error || "Scan failed");
+      setNotice(errors[0]);
+    } else if (errors.length > 0) {
+      setNoticeKind("error");
+      setNotice(`${okCount}/${urls.length} URLs inspected — ${errors[0]}`);
+    } else {
+      setNoticeKind("ok");
+      setNotice(`Scan complete — ${okCount} URLs inspected with Search Console.`);
     }
     setScanning(false);
   }
@@ -237,6 +274,22 @@ export default function IndexingReportAdmin() {
         </div>
       </div>
 
+      {/* live scan progress */}
+      {progress && (
+        <div className="mb-6 rounded-2xl border border-foreground/8 bg-card px-5 py-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-foreground/75">Checking URLs… {progress.done} / {progress.total}</span>
+            <span className="font-bold text-emerald-500">{progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%</span>
+          </div>
+          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-foreground/8">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+              style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {!gsc && (
         <div className="mb-6 rounded-xl border border-foreground/8 bg-card p-8 text-center">
           <Globe className="mx-auto mb-4 h-12 w-12 text-foreground/20" />
@@ -274,48 +327,91 @@ export default function IndexingReportAdmin() {
           {toolsOpen ? <ChevronUp className="h-4 w-4 text-foreground/40" /> : <ChevronDown className="h-4 w-4 text-foreground/40" />}
         </button>
         {toolsOpen && (
-          <div className="grid gap-3 border-t border-violet-500/15 p-5 sm:grid-cols-3">
-            {[
-              {
-                key: "tool-indexnow",
-                icon: Zap,
-                title: "IndexNow All Pages",
-                desc: "Ping Bing, Yandex & partners instantly",
-                action: () => act("tool-indexnow", { action: "indexnow", urls: rows.map((r) => r.url) }, `IndexNow ping sent for ${rows.length} URLs.`),
-                disabled: false,
-              },
-              {
-                key: "tool-sitemap",
-                icon: Radio,
-                title: "Submit Sitemap",
-                desc: "Push sitemap.xml to Search Console",
-                action: () => act("tool-sitemap", { action: "submit-sitemap" }, "Sitemap submitted to Search Console."),
-                disabled: !gsc,
-              },
-              {
-                key: "tool-feed",
-                icon: Rss,
-                title: "Submit RSS Feed",
-                desc: "Push feed.xml as a sitemap source",
-                action: () => act("tool-feed", { action: "submit-feed" }, "RSS feed submitted to Search Console."),
-                disabled: !gsc,
-              },
-            ].map((t) => (
-              <button
-                key={t.key}
-                onClick={t.action}
-                disabled={t.disabled || busy === t.key}
-                className="flex items-start gap-3 rounded-xl border border-foreground/8 bg-card p-4 text-left transition-all hover:border-violet-500/30 disabled:opacity-50"
-              >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                  {busy === t.key ? <Loader2 className="h-4 w-4 animate-spin text-violet-500" /> : <t.icon className="h-4 w-4 text-violet-500" />}
+          <div className="grid gap-4 border-t border-violet-500/15 p-5 lg:grid-cols-3">
+            {/* IndexNow */}
+            <div className="flex flex-col rounded-xl border border-foreground/8 bg-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Zap className="h-4.5 w-4.5 text-blue-500" />
                 </span>
-                <span>
-                  <span className="block text-sm font-semibold text-foreground">{t.title}</span>
-                  <span className="block text-xs text-foreground/45">{t.desc}</span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">IndexNow</p>
+                  <p className="text-xs text-foreground/45">Instant crawl notification</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-foreground/55">
+                Submit only not-indexed URLs to Bing, Yandex &amp; other search engines. No daily limit.
+              </p>
+              <div className="mt-auto pt-4">
+                <button
+                  onClick={() => act("tool-indexnow", { action: "indexnow", urls: notIndexed.map((r) => r.url) }, `IndexNow ping sent for ${notIndexed.length} URLs.`)}
+                  disabled={busy === "tool-indexnow" || notIndexed.length === 0}
+                  title={notIndexed.length === 0 ? "Run a scan first — only not-indexed pages are submitted" : undefined}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {busy === "tool-indexnow" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                  Submit Not-Indexed ({notIndexed.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Sitemap Submit */}
+            <div className="flex flex-col rounded-xl border border-foreground/8 bg-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <Radio className="h-4.5 w-4.5 text-emerald-500" />
                 </span>
-              </button>
-            ))}
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Sitemap Submit</p>
+                  <p className="text-xs text-foreground/45">Google Search Console + Bing</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-foreground/55">
+                Submit sitemap to Google Search Console &amp; Bing. Use after publishing new content.
+              </p>
+              <div className="mt-auto pt-4">
+                <button
+                  onClick={() => act("tool-sitemap", { action: "submit-sitemap" }, "Sitemap submitted to Search Console.")}
+                  disabled={busy === "tool-sitemap" || !gsc}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {busy === "tool-sitemap" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
+                  Submit Sitemap
+                </button>
+              </div>
+            </div>
+
+            {/* RSS Feed */}
+            <div className="flex flex-col rounded-xl border border-foreground/8 bg-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                  <Rss className="h-4.5 w-4.5 text-amber-500" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">RSS Feed</p>
+                  <p className="text-xs text-foreground/45">Auto-discovery for crawlers</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-foreground/55">
+                RSS feed helps search engines discover new content automatically. Active at:
+              </p>
+              <p className="mt-2 flex items-center gap-2 rounded-lg border border-foreground/8 bg-foreground/[0.03] px-3 py-2 font-mono text-xs text-foreground/70">
+                <Rss className="h-3.5 w-3.5 text-amber-500" /> /feed.xml
+              </p>
+              <div className="mt-auto pt-4">
+                <a
+                  href="/feed.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  <ExternalLink className="h-4 w-4" /> View RSS Feed
+                </a>
+              </div>
+              <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/8 px-3 py-2 text-[11px] font-medium text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Active — Auto-linked in {"<head>"}
+              </p>
+            </div>
           </div>
         )}
       </div>

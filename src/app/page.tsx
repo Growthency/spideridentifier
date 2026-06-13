@@ -20,7 +20,10 @@ import { JsonLd, websiteSchema, organizationSchema, faqSchema } from "@/componen
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    types: { "application/rss+xml": [{ url: "/feed.xml", title: "Spider Identifier — Articles" }] },
+  },
 };
 
 export default function HomePage() {

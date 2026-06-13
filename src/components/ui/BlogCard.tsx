@@ -16,7 +16,7 @@ export function BlogCard({ post, featured = false }: { post: BlogPost; featured?
       )}
     >
       <div className={cn("relative", featured ? "h-52 md:h-auto md:w-2/5" : "h-44")}>
-        <BlogMedia slug={post.slug} accent={accent} alt={post.title} className="h-full min-h-44 w-full transition-transform duration-700 group-hover:scale-105" />
+        <BlogMedia slug={post.slug} src={post.featured_image || undefined} accent={accent} alt={post.title} className="h-full min-h-44 w-full transition-transform duration-700 group-hover:scale-105" />
         <span className="absolute left-3 top-3 rounded-full bg-background/70 px-3 py-1 text-xs font-semibold text-[rgb(var(--gold-soft))] backdrop-blur">
           {post.category}
         </span>
@@ -45,9 +45,13 @@ export function BlogCard({ post, featured = false }: { post: BlogPost; featured?
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-foreground/60">{post.excerpt}</p>
         <div className="mt-auto flex items-center justify-between pt-5">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-gradient text-xs font-bold text-ink-950">
-              {post.author_name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.author_avatar || "/images/authors/default-author.webp"}
+              alt=""
+              loading="lazy"
+              className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-foreground/10"
+            />
             <div className="leading-tight">
               <p className="text-xs font-medium text-foreground/80">{post.author_name}</p>
               <p className="text-[11px] text-foreground/45">{post.author_role}</p>
