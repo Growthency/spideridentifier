@@ -40,7 +40,7 @@ export async function PostSidebar({ current, posts }: { current: BlogPost; posts
       <div className={`${card} p-6 text-center`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={current.author_avatar || "/images/authors/default-avatar.svg"}
+          src={current.author_avatar || "/images/authors/default-author.webp"}
           alt={current.author_name}
           className="mx-auto mb-4 h-32 w-32 rounded-full object-cover ring-4 ring-gold/40"
         />

@@ -110,6 +110,57 @@ export async function POST(req: Request) {
       });
     }
 
+    // One small batch of URL inspections — the client loops these so it can
+    // draw a live progress bar; results persist after every batch.
+    if (action === "scan-batch") {
+      if (!gscConfigured) return NextResponse.json({ error: "Search Console not configured" }, { status: 503 });
+      const urls: string[] = (body.urls ?? []).slice(0, 10);
+      if (!urls.length || urls.some((u) => typeof u !== "string" || !u.startsWith(siteConfig.url))) {
+        return NextResponse.json({ error: "Invalid URLs" }, { status: 400 });
+      }
+      const results: { url: string; coverage_state?: string; verdict?: string; last_crawl_time?: string | null; checked_at?: string; error?: string }[] = [];
+      await Promise.all(
+        urls.map(async (url) => {
+          const r = await gscInspectUrl(url);
+          if (r.ok && r.result) {
+            results.push({
+              url,
+              coverage_state: r.result.coverageState,
+              verdict: r.result.verdict,
+              last_crawl_time: r.result.lastCrawlTime ?? null,
+              checked_at: now,
+            });
+          } else if (!r.ok) {
+            results.push({ url, error: friendlyGoogleError(r.error) });
+          } else {
+            results.push({ url });
+          }
+        })
+      );
+      const scan = await loadScan();
+      for (const res of results) {
+        if (!res.checked_at) continue;
+        let row = scan.rows.find((r) => r.url === res.url);
+        if (!row) {
+          row = { url: res.url, coverage_state: null, verdict: null, last_crawl_time: null, checked_at: null, index_requested_at: null, indexnow_requested_at: null, published_at: null };
+          scan.rows.push(row);
+        }
+        row.coverage_state = res.coverage_state ?? null;
+        row.verdict = res.verdict ?? null;
+        row.last_crawl_time = res.last_crawl_time ?? null;
+        row.checked_at = now;
+      }
+      await saveScan(scan);
+      return NextResponse.json({ results });
+    }
+
+    if (action === "scan-finish") {
+      const scan = await loadScan();
+      scan.scanned_at = now;
+      await saveScan(scan);
+      return NextResponse.json({ scanned_at: now });
+    }
+
     if (action === "scan") {
       if (!gscConfigured) return NextResponse.json({ error: "Search Console not configured" }, { status: 503 });
       const [urls, prev] = await Promise.all([allUrls(), loadScan()]);
