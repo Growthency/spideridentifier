@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site";
 
-export const runtime = "edge";
+// Runs in the default Node runtime — OpenNext/Cloudflare bundles the whole app
+// as a single Node Worker, so a separate edge function isn't used.
 export const alt = `${siteConfig.name} — ${siteConfig.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

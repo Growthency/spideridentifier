@@ -1,0 +1,26 @@
+{
+  // ────────────────────────────────────────────────────────────────────────
+  //  Cloudflare Workers config for the Next.js app (via @opennextjs/cloudflare)
+  //  Deploy:  npm run cf:deploy      Preview locally:  npm run cf:preview
+  // ────────────────────────────────────────────────────────────────────────
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "spideridentifier",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  // Required so Node APIs (Buffer, crypto, etc.) work in the Worker runtime.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+  "observability": {
+    "enabled": true
+  }
+  // Server secrets (ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, PADDLE_*, etc.)
+  // are NOT stored here. Set them once with:
+  //   npx wrangler secret put ANTHROPIC_API_KEY
+  // …or in the Cloudflare dashboard → your Worker → Settings → Variables.
+  //
+  // NEXT_PUBLIC_* values are inlined at build time from .env / .env.local, so
+  // they don't need to be listed here.
+}

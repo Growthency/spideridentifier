@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { toWebp } from "@/lib/webp";
+import { imageExt } from "@/lib/webp";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { uploadToBucket } from "@/lib/storageUpload";
 import { writerifyAuthorized, writerifyConfigured } from "@/lib/writerify";
@@ -42,13 +42,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File must be an image." }, { status: 400 });
     }
 
-    const input = Buffer.from(await file.arrayBuffer());
-    const webp = await toWebp(input);
+    const data = Buffer.from(await file.arrayBuffer());
+    const contentType = file.type || "image/jpeg";
 
     const supabase = createAdminClient()!;
-    const path = `uploads/${randomUUID()}.webp`;
-    const url = await uploadToBucket(supabase, BUCKET, path, webp, {
-      contentType: "image/webp",
+    const path = `uploads/${randomUUID()}.${imageExt(contentType)}`;
+    const url = await uploadToBucket(supabase, BUCKET, path, data, {
+      contentType,
       cacheControl: "31536000",
       upsert: false,
     });

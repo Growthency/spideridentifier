@@ -14,7 +14,10 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    // We ship WebP only. Allow optimized AVIF/WebP output for any asset.
+    // Cloudflare Workers has no `sharp`, so Next's image optimizer is disabled
+    // and images are served as-is (our sources are already optimized WebP).
+    // Re-enable optimization later via Cloudflare Images if desired.
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

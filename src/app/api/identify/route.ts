@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
-import { toWebp } from "@/lib/webp";
+import { imageExt } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { uploadToBucket } from "@/lib/storageUpload";
@@ -75,8 +75,10 @@ export async function POST(req: Request) {
     if (!(file instanceof File) || !file.type.startsWith("image/")) {
       return NextResponse.json({ error: "no_image" }, { status: 400 });
     }
-    const input = Buffer.from(await file.arrayBuffer());
-    const webp = await toWebp(input, { maxWidth: 1024, quality: 80 });
+    const data = Buffer.from(await file.arrayBuffer());
+    // Claude vision accepts jpeg/png/gif/webp directly; fall back to jpeg.
+    const supported = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    const mediaType = supported.includes(file.type) ? file.type : "image/jpeg";
 
     // AI vision model call
     const anthropic = new Anthropic({ apiKey });
@@ -88,7 +90,7 @@ export async function POST(req: Request) {
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "base64", media_type: "image/webp", data: webp.toString("base64") } },
+            { type: "image", source: { type: "base64", media_type: mediaType as "image/jpeg", data: data.toString("base64") } },
             { type: "text", text: PROMPT },
           ],
         },
@@ -101,8 +103,8 @@ export async function POST(req: Request) {
     // store image + analysis (identification still succeeds if storage is down)
     let imageUrl: string | null = null;
     try {
-      const path = `uploads/${randomUUID()}.webp`;
-      imageUrl = await uploadToBucket(admin, "scans", path, webp, { contentType: "image/webp", upsert: false });
+      const path = `uploads/${randomUUID()}.${imageExt(mediaType)}`;
+      imageUrl = await uploadToBucket(admin, "scans", path, data, { contentType: mediaType, upsert: false });
     } catch {
       imageUrl = null;
     }

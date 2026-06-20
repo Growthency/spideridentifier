@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { toWebp } from "@/lib/webp";
+import { imageExt } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { uploadToBucket } from "@/lib/storageUpload";
@@ -24,12 +24,12 @@ export async function POST(req: Request) {
     if (!(file instanceof File) || !file.type.startsWith("image/")) {
       return NextResponse.json({ error: "Please choose an image" }, { status: 400 });
     }
-    const input = Buffer.from(await file.arrayBuffer());
-    const webp = await toWebp(input, { maxWidth: 256, quality: 82 });
+    const data = Buffer.from(await file.arrayBuffer());
+    const contentType = file.type || "image/jpeg";
 
     const admin = createAdminClient()!;
-    const path = `avatars/${user.id}/${randomUUID()}.webp`;
-    const url = await uploadToBucket(admin, "scans", path, webp, { contentType: "image/webp", upsert: true });
+    const path = `avatars/${user.id}/${randomUUID()}.${imageExt(contentType)}`;
+    const url = await uploadToBucket(admin, "scans", path, data, { contentType, upsert: true });
     // Heal a missing profile row first — UPDATE on zero rows is a silent
     // no-op, which is exactly how avatars used to vanish on reload.
     await ensureProfile(user);
