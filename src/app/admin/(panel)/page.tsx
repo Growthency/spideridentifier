@@ -99,7 +99,7 @@ export default async function AdminDashboard({
   const { start, end, label: periodLabel, short } = resolvePeriod(periodKey);
 
   let data = null;
-  let loadError = false;
+  let loadError: string | null = null;
   let clicksDaily: { date: string; clicks: number }[] = [];
   try {
     [data, clicksDaily] = await Promise.all([
@@ -110,8 +110,10 @@ export default async function AdminDashboard({
           )
         : Promise.resolve([]),
     ]);
-  } catch {
-    loadError = true;
+  } catch (e) {
+    // TEMP: surface the real error on the dashboard to diagnose the GA4/GSC
+    // connection. Safe — this page is admin-only. Revert once it's working.
+    loadError = e instanceof Error ? e.message : String(e);
   }
 
   const fmt = (v: number) => v.toLocaleString("en-US");
@@ -171,6 +173,10 @@ export default async function AdminDashboard({
           <h2 className="mb-2 text-lg font-semibold text-foreground">Failed to Load Analytics</h2>
           <p className="text-sm text-foreground/55">
             If access was granted just now, Google can take a few minutes — hit Clear Cache and retry.
+          </p>
+          {/* TEMP diagnostic — shows the underlying Google error */}
+          <p className="mx-auto mt-4 max-w-2xl break-words rounded-lg bg-red-500/10 p-3 font-mono text-xs text-red-500/90">
+            {loadError}
           </p>
         </div>
       )}
