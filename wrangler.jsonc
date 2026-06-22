@@ -9,6 +9,9 @@
   "compatibility_date": "2025-03-01",
   // Required so Node APIs (Buffer, crypto, etc.) work in the Worker runtime.
   "compatibility_flags": ["nodejs_compat"],
+  // Keep variables/secrets set in the Cloudflare dashboard — a deploy must
+  // never silently revert them to a stale value.
+  "keep_vars": true,
   "assets": {
     "binding": "ASSETS",
     "directory": ".open-next/assets"

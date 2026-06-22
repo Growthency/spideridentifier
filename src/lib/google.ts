@@ -58,10 +58,15 @@ export async function getAccessToken(): Promise<string | null> {
   const now = Math.floor(Date.now() / 1000);
   if (cachedToken && cachedToken.exp - 300 > now) return cachedToken.token;
 
+  // Trim so a stray space/newline pasted into a secret can't corrupt the JWT
+  // (a bad iss surfaces as the cryptic "invalid_grant: account not found").
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  if (!email) throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL is not set");
+
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claims = b64url(
     JSON.stringify({
-      iss: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      iss: email,
       scope: SCOPES,
       aud: "https://oauth2.googleapis.com/token",
       iat: now,
@@ -70,7 +75,7 @@ export async function getAccessToken(): Promise<string | null> {
   );
   const signingInput = `${header}.${claims}`;
 
-  const pem = process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n");
+  const pem = process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n").trim();
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
     pemToPkcs8(pem),
