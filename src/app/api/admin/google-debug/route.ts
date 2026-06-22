@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
-import { getAccessToken } from "@/lib/google";
+import { getAccessToken, gEnv } from "@/lib/google";
 
 export const runtime = "nodejs";
 
@@ -13,13 +13,19 @@ export const runtime = "nodejs";
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "(NOT SET)";
-  const key = process.env.GOOGLE_PRIVATE_KEY || "";
+  // What the code actually uses now (Cloudflare live binding preferred).
+  const email = gEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL") || "(NOT SET)";
+  const key = gEnv("GOOGLE_PRIVATE_KEY") || "";
 
   const out: Record<string, unknown> = {
     serviceAccountEmail: email,
-    ga4PropertyId: process.env.GA4_PROPERTY_ID || "(NOT SET)",
-    gscSiteUrl: process.env.GSC_SITE_URL || "(NOT SET)",
+    ga4PropertyId: gEnv("GA4_PROPERTY_ID") || "(NOT SET)",
+    gscSiteUrl: gEnv("GSC_SITE_URL") || "(NOT SET)",
+    // Compare the two sources so you can see if the build still carries a stale value.
+    sources: {
+      liveCloudflareEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL === email ? "(same as baked)" : email,
+      bakedAtBuildEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "(NOT SET)",
+    },
     privateKey: key
       ? {
           present: true,

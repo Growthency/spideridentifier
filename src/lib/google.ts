@@ -9,6 +9,25 @@
  *   GSC_SITE_URL                  verified property, e.g. https://example.com/
  */
 
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
+/**
+ * Read an env var preferring the LIVE Cloudflare binding (dashboard Secret/Var)
+ * over the value baked into the bundle at build time. OpenNext inlines .env
+ * into the build, so process.env can be a STALE snapshot; the Cloudflare
+ * runtime binding always reflects what the dashboard has right now. Falls back
+ * to process.env during local dev / build (no Cloudflare request context).
+ */
+export function gEnv(name: string): string | undefined {
+  try {
+    const v = (getCloudflareContext().env as Record<string, unknown>)[name];
+    if (typeof v === "string" && v) return v;
+  } catch {
+    // not inside a Cloudflare request context — use the local/build value
+  }
+  return process.env[name];
+}
+
 const SCOPES = [
   "https://www.googleapis.com/auth/analytics.readonly",
   "https://www.googleapis.com/auth/webmasters",
@@ -23,7 +42,7 @@ export const gscConfigured = googleConfigured && Boolean(process.env.GSC_SITE_UR
 
 /** Property id exactly as Search Console expects (URL-prefix needs the trailing slash). */
 function gscSite(): string {
-  let s = (process.env.GSC_SITE_URL ?? "").trim();
+  let s = (gEnv("GSC_SITE_URL") ?? "").trim();
   if (/^https?:\/\//i.test(s) && !s.endsWith("/")) s += "/";
   return s;
 }
@@ -60,7 +79,7 @@ export async function getAccessToken(): Promise<string | null> {
 
   // Trim so a stray space/newline pasted into a secret can't corrupt the JWT
   // (a bad iss surfaces as the cryptic "invalid_grant: account not found").
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const email = gEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL")?.trim();
   if (!email) throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL is not set");
 
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -75,7 +94,9 @@ export async function getAccessToken(): Promise<string | null> {
   );
   const signingInput = `${header}.${claims}`;
 
-  const pem = process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n").trim();
+  const rawKey = gEnv("GOOGLE_PRIVATE_KEY");
+  if (!rawKey) throw new Error("GOOGLE_PRIVATE_KEY is not set");
+  const pem = rawKey.replace(/\\n/g, "\n").trim();
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
     pemToPkcs8(pem),
@@ -133,7 +154,7 @@ export async function ga4RunReport(report: {
 }): Promise<Ga4Row[]> {
   if (!ga4Configured) return [];
   const data = await googleFetch<Ga4Response>(
-    `https://analyticsdata.googleapis.com/v1beta/properties/${process.env.GA4_PROPERTY_ID}:runReport`,
+    `https://analyticsdata.googleapis.com/v1beta/properties/${gEnv("GA4_PROPERTY_ID")}:runReport`,
     report
   );
   return data.rows ?? [];
