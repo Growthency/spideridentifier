@@ -98,20 +98,27 @@ export default async function AdminDashboard({
   const chartKey = params.chart && CHART_LABELS[params.chart] ? params.chart : "users";
   const { start, end, label: periodLabel, short } = resolvePeriod(periodKey);
 
-  let data = null;
-  let loadError = false;
+  // GA4 and GSC are fetched independently — a failure in one must never zero
+  // the other, and the real error is surfaced (admin-only) for diagnosis.
+  let data: Awaited<ReturnType<typeof getAnalyticsSummary>> | null = null;
   let clicksDaily: { date: string; clicks: number }[] = [];
-  try {
-    [data, clicksDaily] = await Promise.all([
-      getAnalyticsSummary(start, end),
-      gscConfigured
-        ? gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["date"], rowLimit: 1000 }).then((rows) =>
-            rows.map((r) => ({ date: (r.keys?.[0] ?? "").replace(/-/g, ""), clicks: r.clicks }))
-          )
-        : Promise.resolve([]),
-    ]);
-  } catch {
-    loadError = true;
+  let ga4Error = "";
+  let gscError = "";
+
+  if (ga4Configured) {
+    try {
+      data = await getAnalyticsSummary(start, end);
+    } catch (e) {
+      ga4Error = e instanceof Error ? e.message : "GA4 request failed";
+    }
+  }
+  if (gscConfigured) {
+    try {
+      const rows = await gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["date"], rowLimit: 1000 });
+      clicksDaily = rows.map((r) => ({ date: (r.keys?.[0] ?? "").replace(/-/g, ""), clicks: r.clicks }));
+    } catch (e) {
+      gscError = e instanceof Error ? e.message : "GSC request failed";
+    }
   }
 
   const fmt = (v: number) => v.toLocaleString("en-US");
@@ -165,7 +172,7 @@ export default async function AdminDashboard({
           </p>
         </div>
       )}
-      {ga4Configured && loadError && (
+      {ga4Configured && !data && (
         <div className="mb-6 rounded-xl border border-foreground/8 bg-card p-8 text-center">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 text-foreground/20" />
           <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics are connecting…</h2>
@@ -173,6 +180,17 @@ export default async function AdminDashboard({
             Live Google Analytics data will appear here automatically once access finishes setting up. Newly granted
             permissions can take a little while to take effect — use Clear Cache to refresh.
           </p>
+          {ga4Error && (
+            <p className="mx-auto mt-4 max-w-2xl break-words rounded-lg bg-red-500/8 px-3 py-2 text-left font-mono text-[11px] leading-relaxed text-red-500/80">
+              {ga4Error}
+            </p>
+          )}
+        </div>
+      )}
+      {data && gscError && (
+        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-foreground/70">
+          Search Console data is unavailable right now —{" "}
+          <span className="break-words font-mono text-[11px] text-amber-600">{gscError}</span>
         </div>
       )}
 
