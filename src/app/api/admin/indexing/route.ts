@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
 import { isAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBlogPosts, getSpecies } from "@/lib/data";
@@ -7,6 +6,13 @@ import { siteConfig } from "@/lib/site";
 import { gscConfigured, gscInspectUrl, indexingPublish, gscSubmitSitemap } from "@/lib/google";
 
 export const maxDuration = 60;
+
+/** Random hex string via WebCrypto — works on Node and Cloudflare Workers. */
+function randomHex(bytes: number): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export interface IndexRow {
   url: string;
@@ -56,7 +62,7 @@ async function getIndexNowKey(): Promise<string> {
   const { data } = await admin.from("site_content").select("value").eq("key", "indexnow_key").maybeSingle();
   let key = (data?.value as string) || "";
   if (!key) {
-    key = randomBytes(16).toString("hex");
+    key = randomHex(16);
     await admin
       .from("site_content")
       .upsert({ key: "indexnow_key", value: key, updated_at: new Date().toISOString() });

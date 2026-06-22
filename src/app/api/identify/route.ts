@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { imageExt } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
@@ -103,7 +102,7 @@ export async function POST(req: Request) {
     // store image + analysis (identification still succeeds if storage is down)
     let imageUrl: string | null = null;
     try {
-      const path = `uploads/${randomUUID()}.${imageExt(mediaType)}`;
+      const path = `uploads/${crypto.randomUUID()}.${imageExt(mediaType)}`;
       imageUrl = await uploadToBucket(admin, "scans", path, data, { contentType: mediaType, upsert: false });
     } catch {
       imageUrl = null;

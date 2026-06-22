@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { imageExt } from "@/lib/webp";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
     const contentType = file.type || "image/jpeg";
 
     const admin = createAdminClient()!;
-    const path = `avatars/${user.id}/${randomUUID()}.${imageExt(contentType)}`;
+    const path = `avatars/${user.id}/${crypto.randomUUID()}.${imageExt(contentType)}`;
     const url = await uploadToBucket(admin, "scans", path, data, { contentType, upsert: true });
     // Heal a missing profile row first — UPDATE on zero rows is a silent
     // no-op, which is exactly how avatars used to vanish on reload.

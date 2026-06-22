@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { isAdmin } from "@/lib/auth";
 import { imageExt } from "@/lib/webp";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
     const contentType = file.type || "image/jpeg";
 
     const supabase = createAdminClient()!;
-    const path = `uploads/${randomUUID()}.${imageExt(contentType)}`;
+    const path = `uploads/${crypto.randomUUID()}.${imageExt(contentType)}`;
     const url = await uploadToBucket(supabase, BUCKET, path, data, {
       contentType,
       cacheControl: "31536000",

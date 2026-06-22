@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { slugify, readingTime } from "@/lib/utils";
 
 /**
@@ -12,6 +11,14 @@ import { slugify, readingTime } from "@/lib/utils";
 
 export const writerifyConfigured = Boolean(process.env.WRITERIFY_API_TOKEN);
 
+/** Constant-time string compare (runtime-agnostic — no node:crypto). */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 /** Constant-time bearer-token check against WRITERIFY_API_TOKEN. */
 export function writerifyAuthorized(req: Request): boolean {
   const token = process.env.WRITERIFY_API_TOKEN;
@@ -19,9 +26,7 @@ export function writerifyAuthorized(req: Request): boolean {
   const header = req.headers.get("authorization") ?? "";
   const match = /^Bearer\s+(.+)$/i.exec(header.trim());
   if (!match) return false;
-  const given = Buffer.from(match[1].trim());
-  const want = Buffer.from(token);
-  return given.length === want.length && timingSafeEqual(given, want);
+  return safeEqual(match[1].trim(), token);
 }
 
 type Json = Record<string, unknown>;

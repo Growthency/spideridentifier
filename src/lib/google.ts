@@ -1,5 +1,3 @@
-import { createSign } from "node:crypto";
-
 /**
  * Minimal Google service-account client for GA4 (Analytics Data API) and
  * Search Console — plain REST + a self-signed JWT, no extra dependencies.
@@ -30,18 +28,36 @@ function gscSite(): string {
   return s;
 }
 
-const b64url = (input: Buffer | string) =>
-  Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function b64url(input: string | Uint8Array): string {
+  const buf = typeof input === "string" ? Buffer.from(input) : Buffer.from(input);
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** PEM (PKCS#8) private key → ArrayBuffer for WebCrypto importKey. */
+function pemToPkcs8(pem: string): ArrayBuffer {
+  const body = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s+/g, "");
+  const bin = atob(body);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
 
 let cachedToken: { token: string; exp: number } | null = null;
 
-/** OAuth2 access token via signed JWT (cached until ~5 min before expiry). */
+/**
+ * OAuth2 access token from a service-account JWT, signed with WebCrypto so it
+ * behaves identically on Node and the Cloudflare Workers runtime (the legacy
+ * node:crypto `createSign` is unreliable on Workers). Cached until ~5 min
+ * before expiry.
+ */
 export async function getAccessToken(): Promise<string | null> {
   if (!googleConfigured) return null;
   const now = Math.floor(Date.now() / 1000);
   if (cachedToken && cachedToken.exp - 300 > now) return cachedToken.token;
 
-  const key = process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n");
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claims = b64url(
     JSON.stringify({
@@ -52,10 +68,18 @@ export async function getAccessToken(): Promise<string | null> {
       exp: now + 3600,
     })
   );
-  const signer = createSign("RSA-SHA256");
-  signer.update(`${header}.${claims}`);
-  const signature = b64url(signer.sign(key));
-  const assertion = `${header}.${claims}.${signature}`;
+  const signingInput = `${header}.${claims}`;
+
+  const pem = process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n");
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToPkcs8(pem),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sigBuf = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(signingInput));
+  const assertion = `${signingInput}.${b64url(new Uint8Array(sigBuf))}`;
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
