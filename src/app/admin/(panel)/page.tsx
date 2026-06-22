@@ -99,7 +99,7 @@ export default async function AdminDashboard({
   const { start, end, label: periodLabel, short } = resolvePeriod(periodKey);
 
   let data = null;
-  let loadError: string | null = null;
+  let loadError = false;
   let clicksDaily: { date: string; clicks: number }[] = [];
   try {
     [data, clicksDaily] = await Promise.all([
@@ -110,10 +110,8 @@ export default async function AdminDashboard({
           )
         : Promise.resolve([]),
     ]);
-  } catch (e) {
-    // TEMP: surface the real error on the dashboard to diagnose the GA4/GSC
-    // connection. Safe — this page is admin-only. Revert once it's working.
-    loadError = e instanceof Error ? e.message : String(e);
+  } catch {
+    loadError = true;
   }
 
   const fmt = (v: number) => v.toLocaleString("en-US");
@@ -170,13 +168,10 @@ export default async function AdminDashboard({
       {ga4Configured && loadError && (
         <div className="mb-6 rounded-xl border border-foreground/8 bg-card p-8 text-center">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 text-foreground/20" />
-          <h2 className="mb-2 text-lg font-semibold text-foreground">Failed to Load Analytics</h2>
-          <p className="text-sm text-foreground/55">
-            If access was granted just now, Google can take a few minutes — hit Clear Cache and retry.
-          </p>
-          {/* TEMP diagnostic — shows the underlying Google error */}
-          <p className="mx-auto mt-4 max-w-2xl break-words rounded-lg bg-red-500/10 p-3 font-mono text-xs text-red-500/90">
-            {loadError}
+          <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics are connecting…</h2>
+          <p className="mx-auto max-w-md text-sm text-foreground/55">
+            Live Google Analytics data will appear here automatically once access finishes setting up. Newly granted
+            permissions can take a little while to take effect — use Clear Cache to refresh.
           </p>
         </div>
       )}
