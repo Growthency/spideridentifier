@@ -1,22 +1,10 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/sections/Hero";
 import { IdentifySection } from "@/components/sections/IdentifySection";
-import { SpeciesMarquee } from "@/components/sections/SpeciesMarquee";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { WhyAccurate } from "@/components/sections/WhyAccurate";
-import { VisualSignals } from "@/components/sections/VisualSignals";
-import { SpeciesShowcase } from "@/components/sections/SpeciesShowcase";
-import { GuidesGrid } from "@/components/sections/GuidesGrid";
-import { Comparison } from "@/components/sections/Comparison";
-import { LatestGuides } from "@/components/sections/LatestGuides";
-import { Limitations } from "@/components/sections/Limitations";
 import { HomeArticle } from "@/components/sections/HomeArticle";
-import { CtaBand } from "@/components/sections/CtaBand";
-import { WaveDivider } from "@/components/fx/WaveDivider";
 import { JsonLd, homepageGraphSchema } from "@/components/seo/JsonLd";
 
-// Static with hourly refresh — latest guides stay current without
-// per-request rendering.
+// Static with hourly refresh.
 export const revalidate = 3600;
 
 const HOME_TITLE = "Identify Spider - Free Spider Identification App by Picture";
@@ -40,22 +28,10 @@ export default function HomePage() {
       {/* Homepage-only structured data (@graph). Other routes have their own. */}
       <JsonLd data={homepageGraphSchema} />
 
+      {/* Hero + the scan tool stay; everything else is the new SEO content. */}
       <Hero />
       <IdentifySection />
-      <SpeciesMarquee />
-      <HowItWorks />
-      <WaveDivider />
-      <WhyAccurate />
-      <VisualSignals />
-      <WaveDivider />
-      <SpeciesShowcase />
-      <GuidesGrid />
-      <Comparison />
-      <WaveDivider />
-      <LatestGuides />
-      <Limitations />
       <HomeArticle />
-      <CtaBand />
     </>
   );
 }
