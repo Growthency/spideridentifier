@@ -10,7 +10,8 @@
   // Required so Node APIs (Buffer, crypto, etc.) work in the Worker runtime.
   "compatibility_flags": ["nodejs_compat"],
   // Keep variables/secrets set in the Cloudflare dashboard — a deploy must
-  // never silently revert them to a stale value.
+  // never silently revert them to a stale value. Google creds are read
+  // runtime-first (see lib/google.ts gEnv) so dashboard edits take effect.
   "keep_vars": true,
   "assets": {
     "binding": "ASSETS",
