@@ -5,8 +5,6 @@
  */
 
 const ARTICLE_HTML = `
-<p>Have a spider photo and wondering what species it is? Our Spider Identifier by Picture tool helps you identify spiders instantly using advanced image recognition technology. Whether you're looking for a house spider identifier or an AI spider scanner, simply upload an image to get possible matches. The tool can help identify common species such as Wolf Spiders, Jumping Spiders, Orb Weaver Spiders, House Spiders, Black Widow Spiders, and Brown Recluse Spiders. By combining spider image recognition, species databases, and visual analysis, users can quickly learn more about the spiders they encounter indoors or outdoors.</p>
-
 <h2>How Our Spider Identifier Works?</h2>
 <p>Identifying spiders used to require field guides, expert knowledge, and careful observation. Today, artificial intelligence makes the process much faster and more accessible.</p>
 <h3>Upload a Spider Photo</h3>
@@ -466,22 +464,46 @@ const ARTICLE_HTML = `
 <p>A reliable Spider Identifier by Picture tool makes it easier than ever to identify spiders from a simple photograph. Whether you encounter a House Spider in your basement, a Jumping Spider in your garden, an Orb Weaver in a web, or a Wolf Spider on a hiking trail, image recognition technology can help narrow down the possibilities quickly. By analyzing anatomy, coloration, habitat, web structure, and behavioral traits, users gain a deeper understanding of spider diversity while improving identification accuracy and safety awareness.</p>
 `;
 
+/** An icon for every section so the article reads like a designed page, not a doc dump. */
+const H2_EMOJI: Record<string, string> = {
+  "How Our Spider Identifier Works?": "🔍",
+  "Identify a Spider by Picture in Seconds": "📸",
+  "Spider Identification Features": "🧩",
+  "Spider Anatomy for Identification": "🕷️",
+  "Spider Identifier Chart": "📊",
+  "Common Spider Species Our Tool Can Identify": "🕸️",
+  "Dangerous Spider Identification": "⚠️",
+  "Identify Spiders by Color": "🎨",
+  "Identify Spiders by Size": "📏",
+  "Spider Family Identification": "🧬",
+  "Male vs Female Spider Identification": "⚥",
+  "Spider Habitats and Where They Live?": "🏠",
+  "Spider Web Identification Guide": "🪡",
+  "Frequently Misidentified Spiders": "🔀",
+  "Why Use Our Free Spider Identifier?": "✨",
+  "What to Do If You Can't Identify a Spider?": "❓",
+  "Spider Safety and Bite Prevention": "🛡️",
+  "Understanding Spider Life Cycles": "🔄",
+  "Frequently Asked Questions": "💬",
+  "Final Thoughts": "🎯",
+};
+
+function withEmojis(html: string): string {
+  let out = html;
+  for (const [h, e] of Object.entries(H2_EMOJI)) {
+    out = out.replace(`<h2>${h}</h2>`, `<h2><span class="not-prose mr-2.5 align-middle">${e}</span>${h}</h2>`);
+  }
+  return out;
+}
+
 export function HomeArticle() {
   return (
-    <section className="relative py-16 sm:py-20">
+    <section className="relative py-14 sm:py-20">
       <div className="container-px">
-        <div className="mx-auto max-w-4xl">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--gold-soft))]">
-            AI-Powered Arachnology
-          </p>
-          <h2 className="font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl">
-            Identify Spider — Free Spider Identification App by Picture
-          </h2>
-          <div
-            className="prose prose-spider mt-6 max-w-none dark:prose-invert prose-headings:font-display [&_table]:block [&_table]:overflow-x-auto"
-            dangerouslySetInnerHTML={{ __html: ARTICLE_HTML }}
-          />
-        </div>
+        <div
+          className="prose prose-spider mx-auto max-w-4xl dark:prose-invert prose-headings:font-display prose-h2:mt-14 prose-h2:scroll-mt-24 prose-h2:border-l-4 prose-h2:border-gold/50 prose-h2:pl-4 prose-h3:text-[rgb(var(--gold-soft))] [&_table]:block [&_table]:overflow-x-auto [&_thead]:bg-gold/5"
+          dangerouslySetInnerHTML={{ __html: withEmojis(ARTICLE_HTML) }}
+        />
       </div>
     </section>
   );

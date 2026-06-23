@@ -1,10 +1,9 @@
 import { ScanSearch, Sparkles, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Typewriter } from "@/components/fx/Typewriter";
 import { Counter } from "@/components/fx/Counter";
 import { ScrollCue } from "@/components/fx/ScrollCue";
 import { SpiderMark } from "@/components/brand/Logo";
-import { heroRotatingWords, trustBadges } from "@/content/home";
+import { trustBadges } from "@/content/home";
 import { siteConfig } from "@/lib/site";
 import { getSiteContent } from "@/lib/siteContent";
 import { DEFAULT_HOMEPAGE, type HomepageContent } from "@/lib/siteDefaults";
@@ -40,17 +39,19 @@ export async function Hero() {
           </Rise>
 
           <Rise delay={0.05}>
-            <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
-              <span className="text-gradient-animate">Identify</span>{" "}
-              <span className="text-foreground">{home.title_static}</span>
-              <br />
-              <Typewriter words={heroRotatingWords} />
+            {/* Static headline — gradient colour shift only, no typewriter. */}
+            <h1 className="mt-6 font-display text-[26px] font-extrabold leading-[1.12] tracking-tight sm:text-4xl lg:text-5xl xl:text-[3.25rem]">
+              <span className="text-gradient-animate">Identify Spider</span>
+              <span className="text-foreground"> — Free Spider Identification App by Picture</span>
             </h1>
           </Rise>
 
           <Rise delay={0.1}>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-foreground/65">
-              {home.subtitle}
+            <p className="mt-6 max-w-3xl text-base leading-relaxed text-foreground/65 sm:text-lg">
+              Have a spider photo and wondering what species it is? Our Spider Identifier by Picture tool helps you
+              identify spiders instantly using advanced image recognition technology. Whether you&apos;re looking for a
+              house spider identifier or an AI spider scanner, simply upload an image to get possible matches for Wolf
+              Spiders, Jumping Spiders, Orb Weavers, House Spiders, Black Widows, Brown Recluses and more.
             </p>
           </Rise>
 
