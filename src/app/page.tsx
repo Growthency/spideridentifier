@@ -10,28 +10,35 @@ import { GuidesGrid } from "@/components/sections/GuidesGrid";
 import { Comparison } from "@/components/sections/Comparison";
 import { LatestGuides } from "@/components/sections/LatestGuides";
 import { Limitations } from "@/components/sections/Limitations";
-import { Faq } from "@/components/sections/Faq";
+import { HomeArticle } from "@/components/sections/HomeArticle";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { WaveDivider } from "@/components/fx/WaveDivider";
-import { JsonLd, websiteSchema, organizationSchema, faqSchema } from "@/components/seo/JsonLd";
+import { JsonLd, homepageGraphSchema } from "@/components/seo/JsonLd";
 
 // Static with hourly refresh — latest guides stay current without
 // per-request rendering.
 export const revalidate = 3600;
 
+const HOME_TITLE = "Identify Spider - Free Spider Identification App by Picture";
+const HOME_DESCRIPTION =
+  "Identify spiders instantly with our free Spider Identifier by Picture tool. Upload a photo to recognize Wolf Spiders, Jumping Spiders, Orb Weavers, House Spiders, Black Widows, Brown Recluses, and more using AI-powered image recognition.";
+
 export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
   alternates: {
     canonical: "/",
     types: { "application/rss+xml": [{ url: "/feed.xml", title: "Spider Identifier — Articles" }] },
   },
+  openGraph: { title: HOME_TITLE, description: HOME_DESCRIPTION },
+  twitter: { title: HOME_TITLE, description: HOME_DESCRIPTION },
 };
 
 export default function HomePage() {
   return (
     <>
-      <JsonLd data={websiteSchema} />
-      <JsonLd data={organizationSchema} />
-      <JsonLd data={faqSchema} />
+      {/* Homepage-only structured data (@graph). Other routes have their own. */}
+      <JsonLd data={homepageGraphSchema} />
 
       <Hero />
       <IdentifySection />
@@ -47,7 +54,7 @@ export default function HomePage() {
       <WaveDivider />
       <LatestGuides />
       <Limitations />
-      <Faq />
+      <HomeArticle />
       <CtaBand />
     </>
   );
