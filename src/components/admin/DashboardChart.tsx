@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Search } from "lucide-react";
 
 export interface ChartPoint {
   date: string; // YYYYMMDD
@@ -18,6 +19,20 @@ function prettyDate(yyyymmdd: string): string {
   });
 }
 
+/** Search Console has no data yet — explain instead of showing an empty chart. */
+function NoSearchData() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+      <Search className="h-9 w-9 text-foreground/20" />
+      <p className="text-sm font-semibold text-foreground/70">No Search Console clicks yet</p>
+      <p className="max-w-md text-xs leading-relaxed text-foreground/45">
+        Google is still gathering search data for this site. New sites usually take a few weeks before clicks,
+        impressions and keywords show up. Your visitor analytics (Daily Active Users) are already live above.
+      </p>
+    </div>
+  );
+}
+
 /** Daily bar chart with a hover tooltip — users, clicks, or both. */
 export function DashboardChart({ points, mode }: { points: ChartPoint[]; mode: "users" | "clicks" | "both" }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -25,6 +40,10 @@ export function DashboardChart({ points, mode }: { points: ChartPoint[]; mode: "
   if (points.length === 0) {
     return <p className="py-12 text-center text-sm text-foreground/40">No traffic data yet.</p>;
   }
+
+  const totalClicks = points.reduce((s, p) => s + p.clicks, 0);
+  // Clicks-only view with zero Search Console data → clear explanation.
+  if (mode === "clicks" && totalClicks === 0) return <NoSearchData />;
 
   const max = Math.max(
     1,
@@ -79,6 +98,14 @@ export function DashboardChart({ points, mode }: { points: ChartPoint[]; mode: "
         <span>{prettyDate(points[0]?.date ?? "")}</span>
         <span>{prettyDate(points[points.length - 1]?.date ?? "")}</span>
       </div>
+
+      {/* In the combined view, note when Search Console has no clicks yet. */}
+      {mode === "both" && totalClicks === 0 && (
+        <p className="mt-3 rounded-lg bg-amber-500/8 px-3 py-2 text-center text-[11px] leading-relaxed text-amber-600">
+          Search Console clicks: none yet — Google is still collecting search data for this new site (usually a few
+          weeks). Only the green Analytics users are plotted for now.
+        </p>
+      )}
     </div>
   );
 }
