@@ -10,6 +10,7 @@
  */
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Read an env var preferring the LIVE Cloudflare binding (dashboard Secret/Var)
@@ -28,6 +29,48 @@ export function gEnv(name: string): string | undefined {
   return process.env[name];
 }
 
+export interface GoogleCreds {
+  email?: string;
+  privateKey?: string;
+  ga4PropertyId?: string;
+  gscSiteUrl?: string;
+}
+
+let cachedCreds: GoogleCreds | null = null;
+
+/**
+ * Google credentials, read from the Supabase `secure_config` table (key
+ * "google") FIRST, then env vars as a fallback. The database copy is fetched
+ * at runtime and is never baked into the build, so changing it takes effect
+ * immediately with no redeploy — the reliable path on Cloudflare. The table is
+ * RLS-locked to the service role, so the public anon key cannot read it.
+ */
+export async function loadGoogleCreds(force = false): Promise<GoogleCreds> {
+  if (cachedCreds && !force) return cachedCreds;
+  let db: Record<string, unknown> = {};
+  try {
+    const admin = createAdminClient();
+    if (admin) {
+      const { data } = await admin.from("secure_config").select("value").eq("key", "google").maybeSingle();
+      if (data?.value && typeof data.value === "object") db = data.value as Record<string, unknown>;
+    }
+  } catch {
+    // table not installed yet / unreachable — fall back to env
+  }
+  const pick = (dbKey: string, envKey: string): string | undefined => {
+    const v = db[dbKey];
+    if (typeof v === "string" && v.trim()) return v.trim();
+    return gEnv(envKey)?.trim();
+  };
+  cachedCreds = {
+    email: pick("email", "GOOGLE_SERVICE_ACCOUNT_EMAIL"),
+    privateKey: pick("private_key", "GOOGLE_PRIVATE_KEY"),
+    ga4PropertyId: pick("ga4_property_id", "GA4_PROPERTY_ID"),
+    gscSiteUrl: pick("gsc_site_url", "GSC_SITE_URL"),
+  };
+  return cachedCreds;
+}
+
 const SCOPES = [
   "https://www.googleapis.com/auth/analytics.readonly",
   "https://www.googleapis.com/auth/webmasters",
@@ -41,8 +84,8 @@ export const ga4Configured = googleConfigured && Boolean(process.env.GA4_PROPERT
 export const gscConfigured = googleConfigured && Boolean(process.env.GSC_SITE_URL);
 
 /** Property id exactly as Search Console expects (URL-prefix needs the trailing slash). */
-function gscSite(): string {
-  let s = (gEnv("GSC_SITE_URL") ?? "").trim();
+async function gscSite(): Promise<string> {
+  let s = ((await loadGoogleCreds()).gscSiteUrl ?? "").trim();
   if (/^https?:\/\//i.test(s) && !s.endsWith("/")) s += "/";
   return s;
 }
@@ -77,9 +120,11 @@ export async function getAccessToken(): Promise<string | null> {
   const now = Math.floor(Date.now() / 1000);
   if (cachedToken && cachedToken.exp - 300 > now) return cachedToken.token;
 
-  // Trim so a stray space/newline pasted into a secret can't corrupt the JWT
-  // (a bad iss surfaces as the cryptic "invalid_grant: account not found").
-  const email = gEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL")?.trim();
+  // Credentials come from the DB (secure_config) first, env as fallback —
+  // trimmed so a stray space/newline can't corrupt the JWT (a bad iss surfaces
+  // as the cryptic "invalid_grant: account not found").
+  const creds = await loadGoogleCreds();
+  const email = creds.email;
   if (!email) throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL is not set");
 
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -94,9 +139,8 @@ export async function getAccessToken(): Promise<string | null> {
   );
   const signingInput = `${header}.${claims}`;
 
-  const rawKey = gEnv("GOOGLE_PRIVATE_KEY");
-  if (!rawKey) throw new Error("GOOGLE_PRIVATE_KEY is not set");
-  const pem = rawKey.replace(/\\n/g, "\n").trim();
+  if (!creds.privateKey) throw new Error("GOOGLE_PRIVATE_KEY is not set");
+  const pem = creds.privateKey.replace(/\\n/g, "\n").trim();
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
     pemToPkcs8(pem),
@@ -154,7 +198,7 @@ export async function ga4RunReport(report: {
 }): Promise<Ga4Row[]> {
   if (!ga4Configured) return [];
   const data = await googleFetch<Ga4Response>(
-    `https://analyticsdata.googleapis.com/v1beta/properties/${gEnv("GA4_PROPERTY_ID")}:runReport`,
+    `https://analyticsdata.googleapis.com/v1beta/properties/${(await loadGoogleCreds()).ga4PropertyId}:runReport`,
     report
   );
   return data.rows ?? [];
@@ -247,7 +291,7 @@ async function withGscAccess<T>(call: () => Promise<T>): Promise<T> {
     triedSiteAdd = true;
     try {
       const token = await getAccessToken();
-      await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(gscSite())}`, {
+      await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(await gscSite())}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -274,7 +318,7 @@ export async function gscSearchAnalytics(body: {
   dimensionFilterGroups?: unknown[];
 }): Promise<GscRow[]> {
   if (!gscConfigured) return [];
-  const site = encodeURIComponent(gscSite());
+  const site = encodeURIComponent(await gscSite());
   const data = await withGscAccess(() =>
     googleFetch<{ rows?: GscRow[] }>(
       `https://www.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query`,
@@ -309,7 +353,7 @@ export async function indexingPublish(url: string): Promise<{ ok: boolean; error
 export async function gscSubmitSitemap(feedUrl: string): Promise<{ ok: boolean; error?: string }> {
   if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
   try {
-    const site = encodeURIComponent(gscSite());
+    const site = encodeURIComponent(await gscSite());
     await withGscAccess(async () => {
       const token = await getAccessToken();
       const res = await fetch(
@@ -330,6 +374,7 @@ export type InspectionResult = { ok: true; result: UrlInspection | null } | { ok
 export async function gscInspectUrl(url: string): Promise<InspectionResult> {
   if (!gscConfigured) return { ok: false, error: "Search Console not configured" };
   try {
+    const site = await gscSite();
     const data = await withGscAccess(() =>
       googleFetch<{
         inspectionResult?: {
@@ -342,7 +387,7 @@ export async function gscInspectUrl(url: string): Promise<InspectionResult> {
         };
       }>("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
         inspectionUrl: url,
-        siteUrl: gscSite(),
+        siteUrl: site,
       })
     );
     const r = data.inspectionResult?.indexStatusResult;
