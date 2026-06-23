@@ -11,12 +11,17 @@ import {
   Globe,
   CheckCircle2,
   XCircle,
+  Search,
+  MousePointerClick,
 } from "lucide-react";
-import { getAnalyticsSummary, ga4Configured, gscConfigured, gscSearchAnalytics } from "@/lib/google";
+import { getAnalyticsSummary, ga4Configured, gscConfigured, gscSearchAnalytics, type GscRow } from "@/lib/google";
 import { ClearCacheButton } from "@/components/admin/ClearCacheButton";
 import { DashboardFilters, PERIOD_LABELS, CHART_LABELS } from "@/components/admin/DashboardFilters";
+import { DashboardChart } from "@/components/admin/DashboardChart";
 
-export const revalidate = 600;
+// Always render fresh so the period / chart dropdowns (URL searchParams) take
+// effect — a cached page would ignore the selection.
+export const dynamic = "force-dynamic";
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -102,6 +107,8 @@ export default async function AdminDashboard({
   // the other, and the real error is surfaced (admin-only) for diagnosis.
   let data: Awaited<ReturnType<typeof getAnalyticsSummary>> | null = null;
   let clicksDaily: { date: string; clicks: number }[] = [];
+  let topQueries: GscRow[] = [];
+  let topSearchPages: GscRow[] = [];
   let ga4Error = "";
   let gscError = "";
 
@@ -114,8 +121,14 @@ export default async function AdminDashboard({
   }
   if (gscConfigured) {
     try {
-      const rows = await gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["date"], rowLimit: 1000 });
-      clicksDaily = rows.map((r) => ({ date: (r.keys?.[0] ?? "").replace(/-/g, ""), clicks: r.clicks }));
+      const [dailyRows, queryRows, pageRows] = await Promise.all([
+        gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["date"], rowLimit: 1000 }),
+        gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["query"], rowLimit: 25 }),
+        gscSearchAnalytics({ startDate: start, endDate: end, dimensions: ["page"], rowLimit: 25 }),
+      ]);
+      clicksDaily = dailyRows.map((r) => ({ date: (r.keys?.[0] ?? "").replace(/-/g, ""), clicks: r.clicks }));
+      topQueries = queryRows;
+      topSearchPages = pageRows;
     } catch (e) {
       gscError = e instanceof Error ? e.message : "GSC request failed";
     }
@@ -130,16 +143,12 @@ export default async function AdminDashboard({
   const merged = bucketize(
     (data?.daily ?? []).map((d) => ({ date: d.date, users: d.users, clicks: clickMap.get(d.date) ?? 0 }))
   );
-  const chartMax = Math.max(
-    1,
-    ...merged.map((d) => (chartKey === "users" ? d.users : chartKey === "clicks" ? d.clicks : Math.max(d.users, d.clicks)))
-  );
-  const prettyDate = (yyyymmdd: string) => {
-    if (yyyymmdd.length !== 8) return yyyymmdd;
-    return new Date(`${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+  const path = (url: string) => {
+    try {
+      return new URL(url).pathname || "/";
+    } catch {
+      return url;
+    }
   };
 
   return (
@@ -231,41 +240,7 @@ export default async function AdminDashboard({
           </div>
         )}
 
-        {merged.length > 0 ? (
-          <div>
-            <div className="flex h-48 items-end gap-[3px]">
-              {merged.map((d) =>
-                chartKey === "both" ? (
-                  <div key={d.date} title={`${prettyDate(d.date)}: ${fmt(d.users)} users · ${fmt(d.clicks)} clicks`} className="flex flex-1 items-end gap-[1px]">
-                    <div
-                      className="flex-1 rounded-t-sm bg-emerald-400/85 transition-colors hover:bg-emerald-500"
-                      style={{ height: `${Math.max(2, (d.users / chartMax) * 100)}%` }}
-                    />
-                    <div
-                      className="flex-1 rounded-t-sm bg-sky-400/85 transition-colors hover:bg-sky-500"
-                      style={{ height: `${Math.max(2, (d.clicks / chartMax) * 100)}%` }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    key={d.date}
-                    title={`${prettyDate(d.date)}: ${fmt(chartKey === "clicks" ? d.clicks : d.users)} ${chartKey === "clicks" ? "clicks" : "users"}`}
-                    className={`flex-1 rounded-t-md transition-colors ${
-                      chartKey === "clicks" ? "bg-sky-400/85 hover:bg-sky-500" : "bg-emerald-400/80 hover:bg-emerald-500"
-                    }`}
-                    style={{ height: `${Math.max(3, ((chartKey === "clicks" ? d.clicks : d.users) / chartMax) * 100)}%` }}
-                  />
-                )
-              )}
-            </div>
-            <div className="mt-2 flex justify-between text-[10px] text-foreground/40">
-              <span>{prettyDate(merged[0]?.date ?? "")}</span>
-              <span>{prettyDate(merged[merged.length - 1]?.date ?? "")}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="py-12 text-center text-sm text-foreground/40">No traffic data yet.</p>
-        )}
+        <DashboardChart points={merged} mode={chartKey as "users" | "clicks" | "both"} />
       </div>
 
       {/* Top pages + Top countries */}
@@ -278,7 +253,7 @@ export default async function AdminDashboard({
             <span className="text-xs text-foreground/45">by pageviews</span>
           </div>
           {data && data.topPages.length > 0 ? (
-            <ul>
+            <ul className="max-h-[460px] overflow-y-auto">
               {data.topPages.map((p, i) => (
                 <li key={`${p.path}-${i}`} className="border-b border-foreground/5 px-5 py-3 last:border-0">
                   <div className="flex items-start gap-3">
@@ -310,7 +285,7 @@ export default async function AdminDashboard({
             <span className="text-xs text-foreground/45">by active users</span>
           </div>
           {data && data.topCountries.length > 0 ? (
-            <ul>
+            <ul className="max-h-[460px] overflow-y-auto">
               {data.topCountries.map((c, i) => (
                 <li key={`${c.country}-${i}`} className="border-b border-foreground/5 px-5 py-3 last:border-0">
                   <div className="flex items-center gap-3">
@@ -330,6 +305,91 @@ export default async function AdminDashboard({
             </ul>
           ) : (
             <p className="px-5 py-10 text-center text-sm text-foreground/40">No country data yet.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Top search keywords + search pages (Search Console) */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* Top 25 Search Keywords */}
+        <div className="overflow-hidden rounded-xl border border-foreground/8 bg-card">
+          <div className="flex items-center justify-between border-b border-foreground/8 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Search className="h-4 w-4 text-[rgb(var(--gold-soft))]" /> Top 25 Search Keywords
+            </h2>
+            <span className="text-xs text-foreground/45">Search Console</span>
+          </div>
+          {topQueries.length > 0 ? (
+            <div className="max-h-[460px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card text-left text-[10px] uppercase tracking-wide text-foreground/40">
+                  <tr className="border-b border-foreground/8">
+                    <th className="px-3 py-2 font-medium">#</th>
+                    <th className="py-2 font-medium">Keyword</th>
+                    <th className="px-2 py-2 text-right font-medium">Clicks</th>
+                    <th className="px-2 py-2 text-right font-medium">Impr</th>
+                    <th className="px-2 py-2 text-right font-medium">CTR</th>
+                    <th className="px-3 py-2 text-right font-medium">Pos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topQueries.map((r, i) => (
+                    <tr key={`${r.keys?.[0]}-${i}`} className="border-b border-foreground/5 last:border-0">
+                      <td className="px-3 py-2.5 text-xs font-bold text-foreground/35">{i + 1}</td>
+                      <td className="max-w-[160px] truncate py-2.5 font-medium text-foreground" title={r.keys?.[0]}>{r.keys?.[0]}</td>
+                      <td className="px-2 py-2.5 text-right font-semibold text-emerald-500">{fmt(r.clicks)}</td>
+                      <td className="px-2 py-2.5 text-right text-foreground/60">{fmt(r.impressions)}</td>
+                      <td className="px-2 py-2.5 text-right text-foreground/60">{(r.ctr * 100).toFixed(1)}%</td>
+                      <td className="px-3 py-2.5 text-right text-foreground/60">{r.position.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="px-5 py-10 text-center text-sm text-foreground/40">
+              {gscConfigured ? "No search data yet — give Google a few days." : "Connect Search Console."}
+            </p>
+          )}
+        </div>
+
+        {/* Top 25 Search Pages */}
+        <div className="overflow-hidden rounded-xl border border-foreground/8 bg-card">
+          <div className="flex items-center justify-between border-b border-foreground/8 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <MousePointerClick className="h-4 w-4 text-[rgb(var(--gold-soft))]" /> Top 25 Search Pages
+            </h2>
+            <span className="text-xs text-foreground/45">by clicks</span>
+          </div>
+          {topSearchPages.length > 0 ? (
+            <div className="max-h-[460px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card text-left text-[10px] uppercase tracking-wide text-foreground/40">
+                  <tr className="border-b border-foreground/8">
+                    <th className="px-3 py-2 font-medium">#</th>
+                    <th className="py-2 font-medium">Page</th>
+                    <th className="px-2 py-2 text-right font-medium">Clicks</th>
+                    <th className="px-2 py-2 text-right font-medium">Impr</th>
+                    <th className="px-3 py-2 text-right font-medium">Pos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topSearchPages.map((r, i) => (
+                    <tr key={`${r.keys?.[0]}-${i}`} className="border-b border-foreground/5 last:border-0">
+                      <td className="px-3 py-2.5 text-xs font-bold text-foreground/35">{i + 1}</td>
+                      <td className="max-w-[160px] truncate py-2.5 font-mono text-xs text-foreground" title={r.keys?.[0]}>{path(r.keys?.[0] ?? "")}</td>
+                      <td className="px-2 py-2.5 text-right font-semibold text-sky-500">{fmt(r.clicks)}</td>
+                      <td className="px-2 py-2.5 text-right text-foreground/60">{fmt(r.impressions)}</td>
+                      <td className="px-3 py-2.5 text-right text-foreground/60">{r.position.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="px-5 py-10 text-center text-sm text-foreground/40">
+              {gscConfigured ? "No search data yet — give Google a few days." : "Connect Search Console."}
+            </p>
           )}
         </div>
       </div>
