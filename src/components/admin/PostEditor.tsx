@@ -1,40 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Save,
-  Eye,
-  Loader2,
-  ImagePlus,
-  Upload,
-  Undo2,
-  Redo2,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Quote,
-  Code,
-  Minus,
-  Table,
-  Link2,
-  FileCode2,
-  Search,
-  Pilcrow,
-} from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Upload, Code, Link2, FileCode2, Search } from "lucide-react";
 import type { BlogPost } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
 import { DEFAULT_EDITOR_OPTIONS, type EditorOptions } from "@/lib/siteDefaults";
 import { dialogConfirm, dialogPrompt } from "@/components/ui/Dialog";
+import RichEditor from "@/components/admin/RichEditor";
 
 export interface InterlinkCandidate {
   phrase: string;
@@ -145,15 +120,15 @@ export function PostEditor({
     custom_css: post?.custom_css ?? "",
     custom_schema: post?.custom_schema ?? "",
   });
-  const [htmlMode, setHtmlMode] = useState(false);
   const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
-  const [uploading, setUploading] = useState<"cover" | "avatar" | "inline" | null>(null);
+  const [uploading, setUploading] = useState<"cover" | "avatar" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Bumped whenever we mutate form.content from outside the editor (interlink)
+  // so RichEditor re-seeds its contentEditable DOM from the new value.
+  const [resetKey, setResetKey] = useState(0);
 
-  const editorRef = useRef<HTMLDivElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
-  const inlineRef = useRef<HTMLInputElement>(null);
 
   const set = useCallback((k: keyof Draft, v: unknown) => setForm((f) => ({ ...f, [k]: v })), []);
 
@@ -188,28 +163,6 @@ export function PostEditor({
     set(formKey, next[0]);
   }
 
-  // seed the editable area once (and when toggling back from HTML view)
-  useEffect(() => {
-    if (!htmlMode && editorRef.current && editorRef.current.innerHTML !== (form.content ?? "")) {
-      editorRef.current.innerHTML = form.content ?? "";
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [htmlMode]);
-  useEffect(() => {
-    if (editorRef.current) editorRef.current.innerHTML = form.content ?? "";
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const syncFromEditor = () => {
-    if (editorRef.current) set("content", editorRef.current.innerHTML);
-  };
-
-  const exec = (cmd: string, val?: string) => {
-    editorRef.current?.focus();
-    document.execCommand(cmd, false, val);
-    syncFromEditor();
-  };
-
   /* ── uploads (all converted to WebP server-side) ── */
   async function readJson(res: Response): Promise<Record<string, unknown>> {
     const text = await res.text();
@@ -229,15 +182,14 @@ export function PostEditor({
     return String(json.url);
   }
 
-  async function handleUpload(kind: "cover" | "avatar" | "inline", file?: File | null) {
+  async function handleUpload(kind: "cover" | "avatar", file?: File | null) {
     if (!file) return;
     setUploading(kind);
     setError(null);
     try {
       const url = await uploadImage(file);
       if (kind === "cover") set("featured_image", url);
-      else if (kind === "avatar") set("author_avatar", url);
-      else exec("insertHTML", `<img src="${url}" alt="" />`);
+      else set("author_avatar", url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -263,23 +215,67 @@ export function PostEditor({
       .slice(0, 6);
   }, [form.content, form.slug, interlinks]);
 
+  /* Wrap the first un-linked occurrence of the phrase in an <a>, working on the
+     content STRING (not the live DOM) so the link lands exactly on that phrase
+     and never jumps elsewhere. Re-seeds the editor via resetKey.
+
+     Robust against the phrase spanning inline markup (e.g. "house spider" where
+     "house" is bold): we group consecutive eligible text nodes into runs — an
+     existing <a> breaks a run — then map a match in the concatenated run text
+     back onto its start/end nodes and wrap with extractContents/insertNode
+     (surroundContents throws on cross-element ranges; this does not). */
   function applyInterlink(c: InterlinkCandidate) {
-    const root = editorRef.current;
+    const html = form.content ?? "";
+    const doc = new DOMParser().parseFromString(`<div id="__root">${html}</div>`, "text/html");
+    const root = doc.getElementById("__root");
     if (!root) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+    type Part = { node: Text; start: number; len: number };
+    type Run = { text: string; parts: Part[] };
+    const runs: Run[] = [];
+    let cur: Run | null = null;
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let n: Node | null;
+    while ((n = walker.nextNode())) {
+      const t = n as Text;
+      if (t.parentElement?.closest("a")) {
+        cur = null; // existing link breaks the run so we never link across it
+        continue;
+      }
+      if (!cur) {
+        cur = { text: "", parts: [] };
+        runs.push(cur);
+      }
+      const content = t.textContent ?? "";
+      cur.parts.push({ node: t, start: cur.text.length, len: content.length });
+      cur.text += content;
+    }
+
     const phrase = c.phrase.toLowerCase();
-    let node: Text | null;
-    while ((node = walker.nextNode() as Text | null)) {
-      if (node.parentElement?.closest("a")) continue;
-      const idx = node.textContent?.toLowerCase().indexOf(phrase) ?? -1;
+    const locate = (run: Run, offset: number) => {
+      const p = run.parts.find((part) => offset >= part.start && offset <= part.start + part.len);
+      return p ? { node: p.node, offset: offset - p.start } : null;
+    };
+
+    for (const run of runs) {
+      const idx = run.text.toLowerCase().indexOf(phrase);
       if (idx === -1) continue;
-      const range = document.createRange();
-      range.setStart(node, idx);
-      range.setEnd(node, idx + c.phrase.length);
-      const a = document.createElement("a");
-      a.href = c.href;
-      range.surroundContents(a);
-      syncFromEditor();
+      const startAt = locate(run, idx);
+      const endAt = locate(run, idx + c.phrase.length);
+      if (!startAt || !endAt) continue;
+      const range = doc.createRange();
+      range.setStart(startAt.node, startAt.offset);
+      range.setEnd(endAt.node, endAt.offset);
+      const a = doc.createElement("a");
+      a.setAttribute("href", c.href);
+      try {
+        a.appendChild(range.extractContents());
+        range.insertNode(a);
+      } catch {
+        continue; // try the next run rather than silently giving up
+      }
+      set("content", root.innerHTML);
+      setResetKey((k) => k + 1);
       return;
     }
   }
@@ -288,7 +284,7 @@ export function PostEditor({
   async function save(status: "draft" | "published") {
     setSaving(status === "draft" ? "draft" : "publish");
     setError(null);
-    const html = htmlMode ? (form.content ?? "") : (editorRef.current?.innerHTML ?? form.content ?? "");
+    const html = form.content ?? "";
     const words = stripTags(html).split(" ").filter(Boolean).length;
     const pubDate = form.published_at ? new Date(form.published_at) : null;
     const payload = {
@@ -324,32 +320,6 @@ export function PostEditor({
     "w-full rounded-xl border border-foreground/10 bg-foreground/5 px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-gold/50 focus:outline-none";
   const cardCls = "rounded-2xl border border-foreground/8 bg-card p-5";
   const cardTitle = "mb-3 text-sm font-semibold text-foreground";
-
-  const ToolBtn = ({
-    onClick,
-    title,
-    children,
-    active = false,
-  }: {
-    onClick: () => void;
-    title: string;
-    children: React.ReactNode;
-    active?: boolean;
-  }) => (
-    <button
-      type="button"
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      title={title}
-      className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-foreground/65 transition-colors hover:bg-foreground/8 hover:text-foreground ${
-        active ? "bg-emerald-500/15 text-emerald-600" : ""
-      }`}
-    >
-      {children}
-    </button>
-  );
-
-  const Divider = () => <span className="mx-0.5 h-5 w-px shrink-0 bg-foreground/10" />;
 
   /** Select with admin-editable options: ＋ adds a new entry, 🗑 removes the selected one. */
   const EditableSelect = ({
@@ -390,9 +360,6 @@ export function PostEditor({
       </div>
     );
   };
-
-  const TABLE_HTML =
-    "<table><thead><tr><th>Heading</th><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr></tbody></table><p><br/></p>";
 
   const seg = (active: boolean) =>
     `flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
@@ -500,125 +467,12 @@ export function PostEditor({
           {/* Content */}
           <div className={cardCls}>
             <p className={cardTitle}>Content</p>
-            {/* toolbar */}
-            <div className="mb-2 flex flex-wrap items-center gap-0.5 rounded-xl border border-foreground/10 bg-foreground/[0.03] p-1.5">
-              <ToolBtn title="Undo" onClick={() => exec("undo")}>
-                <Undo2 className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Redo" onClick={() => exec("redo")}>
-                <Redo2 className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn title="Heading 2" onClick={() => exec("formatBlock", "h2")}>
-                <span className="text-xs font-bold">H2</span>
-              </ToolBtn>
-              <ToolBtn title="Heading 3" onClick={() => exec("formatBlock", "h3")}>
-                <span className="text-xs font-bold">H3</span>
-              </ToolBtn>
-              <ToolBtn title="Heading 4" onClick={() => exec("formatBlock", "h4")}>
-                <span className="text-xs font-bold">H4</span>
-              </ToolBtn>
-              <ToolBtn title="Paragraph" onClick={() => exec("formatBlock", "p")}>
-                <Pilcrow className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn title="Bold" onClick={() => exec("bold")}>
-                <Bold className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Italic" onClick={() => exec("italic")}>
-                <Italic className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Underline" onClick={() => exec("underline")}>
-                <Underline className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Strikethrough" onClick={() => exec("strikeThrough")}>
-                <Strikethrough className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn title="Bullet list" onClick={() => exec("insertUnorderedList")}>
-                <List className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Numbered list" onClick={() => exec("insertOrderedList")}>
-                <ListOrdered className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn title="Align left" onClick={() => exec("justifyLeft")}>
-                <AlignLeft className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Align centre" onClick={() => exec("justifyCenter")}>
-                <AlignCenter className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Align right" onClick={() => exec("justifyRight")}>
-                <AlignRight className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn title="Blockquote" onClick={() => exec("formatBlock", "blockquote")}>
-                <Quote className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Code block" onClick={() => exec("formatBlock", "pre")}>
-                <Code className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Divider" onClick={() => exec("insertHorizontalRule")}>
-                <Minus className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Insert table" onClick={() => exec("insertHTML", TABLE_HTML)}>
-                <Table className="h-4 w-4" />
-              </ToolBtn>
-              <Divider />
-              <ToolBtn
-                title="Insert link"
-                onClick={async () => {
-                  const url = await dialogPrompt("Link URL");
-                  if (url) exec("createLink", url);
-                }}
-              >
-                <Link2 className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn
-                title="Image by URL"
-                onClick={async () => {
-                  const url = await dialogPrompt("Image URL");
-                  if (url) exec("insertHTML", `<img src="${url}" alt="" />`);
-                }}
-              >
-                <ImagePlus className="h-4 w-4" />
-              </ToolBtn>
-              <ToolBtn title="Upload image" onClick={() => inlineRef.current?.click()}>
-                {uploading === "inline" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              </ToolBtn>
-              <input ref={inlineRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload("inline", e.target.files?.[0])} />
-              <span className="ml-auto" />
-              <button
-                type="button"
-                onClick={() => {
-                  if (!htmlMode && editorRef.current) set("content", editorRef.current.innerHTML);
-                  setHtmlMode((m) => !m);
-                }}
-                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold ${
-                  htmlMode ? "bg-emerald-500/15 text-emerald-600" : "text-foreground/60 hover:bg-foreground/8"
-                }`}
-              >
-                <FileCode2 className="h-3.5 w-3.5" /> HTML
-              </button>
-            </div>
-
-            {htmlMode ? (
-              <textarea
-                value={form.content}
-                onChange={(e) => set("content", e.target.value)}
-                spellCheck={false}
-                className="min-h-[480px] w-full rounded-xl border border-foreground/10 bg-foreground/5 p-4 font-mono text-xs leading-relaxed text-foreground focus:border-gold/50 focus:outline-none"
-              />
-            ) : (
-              <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                onInput={syncFromEditor}
-                onBlur={syncFromEditor}
-                className="prose-spider prose min-h-[480px] w-full max-w-none rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 text-[15px] leading-relaxed text-foreground focus:border-gold/50 focus:outline-none dark:prose-invert prose-headings:font-display"
-              />
-            )}
+            <RichEditor
+              value={form.content ?? ""}
+              onChange={(html) => set("content", html)}
+              resetKey={resetKey}
+              uploadEndpoint="/api/upload"
+            />
           </div>
         </div>
 
