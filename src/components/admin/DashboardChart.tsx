@@ -61,7 +61,7 @@ export function DashboardChart({ points, mode }: { points: ChartPoint[]; mode: "
             key={d.date}
             onMouseEnter={() => setHover(i)}
             onMouseLeave={() => setHover((cur) => (cur === i ? null : cur))}
-            className={`flex flex-1 cursor-default items-end gap-[1px] rounded-t-sm transition-colors ${
+            className={`flex h-full flex-1 cursor-default items-end gap-[1px] rounded-t-sm transition-colors ${
               hover === i ? "bg-foreground/5" : ""
             }`}
           >

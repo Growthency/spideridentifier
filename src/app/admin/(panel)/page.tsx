@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getAnalyticsSummary, ga4Configured, gscConfigured, gscSearchAnalytics, type GscRow } from "@/lib/google";
 import { ClearCacheButton } from "@/components/admin/ClearCacheButton";
-import { DashboardFilters, PERIOD_LABELS, CHART_LABELS } from "@/components/admin/DashboardFilters";
+import { PeriodFilter, ChartFilter, PERIOD_LABELS, CHART_LABELS } from "@/components/admin/DashboardFilters";
 import { DashboardChart } from "@/components/admin/DashboardChart";
 
 // Always render fresh so the period / chart dropdowns (URL searchParams) take
@@ -161,7 +161,7 @@ export default async function AdminDashboard({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ClearCacheButton />
-          <DashboardFilters period={periodKey} chart={chartKey} />
+          <PeriodFilter period={periodKey} chart={chartKey} />
           <Chip ok={ga4Configured} label="GA4 Connected" />
           <Chip ok={gscConfigured} label="Search Console" />
         </div>
@@ -225,7 +225,12 @@ export default async function AdminDashboard({
             <BarChart3 className="h-4 w-4 text-[rgb(var(--gold-soft))]" />
             {CHART_LABELS[chartKey]} — {periodLabel}
           </h2>
-          <span className="text-xs text-foreground/45">{chartKey === "both" ? "GA4 + GSC" : chartKey === "clicks" ? "from Search Console" : "from Google Analytics"}</span>
+          <div className="flex items-center gap-3">
+            <ChartFilter period={periodKey} chart={chartKey} />
+            <span className="hidden text-xs text-foreground/45 sm:inline">
+              {chartKey === "both" ? "GA4 + GSC" : chartKey === "clicks" ? "from Search Console" : "from Google Analytics"}
+            </span>
+          </div>
         </div>
 
         {/* legend for the combined view */}

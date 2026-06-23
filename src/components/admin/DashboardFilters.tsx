@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Calendar, ChevronDown, BarChart3 } from "lucide-react";
 
 export const PERIOD_LABELS: Record<string, string> = {
@@ -73,15 +72,21 @@ function Dropdown({
   );
 }
 
-/** Mushroom-style period + chart-type dropdown filters for the dashboard. */
-export function DashboardFilters({ period, chart }: { period: string; chart: string }) {
-  const router = useRouter();
-  const go = (p: string, c: string) => router.push(`/admin?period=${p}&chart=${c}`);
+/**
+ * Full reload on change — a hard navigation guarantees the server re-renders
+ * with the new period/chart on every host (a soft client navigation can be
+ * served from cache on Cloudflare and appear to "do nothing").
+ */
+function go(period: string, chart: string) {
+  window.location.assign(`/admin?period=${period}&chart=${chart}`);
+}
 
-  return (
-    <>
-      <Dropdown icon={Calendar} value={period} options={PERIOD_LABELS} onSelect={(p) => go(p, chart)} />
-      <Dropdown icon={BarChart3} value={chart} options={CHART_LABELS} onSelect={(c) => go(period, c)} />
-    </>
-  );
+/** Date-range dropdown (page header). */
+export function PeriodFilter({ period, chart }: { period: string; chart: string }) {
+  return <Dropdown icon={Calendar} value={period} options={PERIOD_LABELS} onSelect={(p) => go(p, chart)} />;
+}
+
+/** Chart-type dropdown (sits on the chart card). */
+export function ChartFilter({ period, chart }: { period: string; chart: string }) {
+  return <Dropdown icon={BarChart3} value={chart} options={CHART_LABELS} onSelect={(c) => go(period, c)} />;
 }
