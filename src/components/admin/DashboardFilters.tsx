@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Calendar, ChevronDown, BarChart3 } from "lucide-react";
 
 export const PERIOD_LABELS: Record<string, string> = {
@@ -73,20 +74,33 @@ function Dropdown({
 }
 
 /**
- * Full reload on change — a hard navigation guarantees the server re-renders
- * with the new period/chart on every host (a soft client navigation can be
- * served from cache on Cloudflare and appear to "do nothing").
+ * Soft navigation — updates the URL's searchParams in place so the dashboard
+ * re-renders with the new period/chart WITHOUT a full page reload. The page is
+ * force-dynamic, so the server always renders fresh data for the selection.
  */
-function go(period: string, chart: string) {
-  window.location.assign(`/admin?period=${period}&chart=${chart}`);
-}
 
 /** Date-range dropdown (page header). */
 export function PeriodFilter({ period, chart }: { period: string; chart: string }) {
-  return <Dropdown icon={Calendar} value={period} options={PERIOD_LABELS} onSelect={(p) => go(p, chart)} />;
+  const router = useRouter();
+  return (
+    <Dropdown
+      icon={Calendar}
+      value={period}
+      options={PERIOD_LABELS}
+      onSelect={(p) => router.push(`/admin?period=${p}&chart=${chart}`, { scroll: false })}
+    />
+  );
 }
 
 /** Chart-type dropdown (sits on the chart card). */
 export function ChartFilter({ period, chart }: { period: string; chart: string }) {
-  return <Dropdown icon={BarChart3} value={chart} options={CHART_LABELS} onSelect={(c) => go(period, c)} />;
+  const router = useRouter();
+  return (
+    <Dropdown
+      icon={BarChart3}
+      value={chart}
+      options={CHART_LABELS}
+      onSelect={(c) => router.push(`/admin?period=${period}&chart=${c}`, { scroll: false })}
+    />
+  );
 }
