@@ -1,9 +1,14 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import kvIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache";
 
-// Minimal OpenNext → Cloudflare config. Runs the full Next.js app (Node.js
-// runtime) on Cloudflare Workers, so no route needs `export const runtime`.
+// OpenNext → Cloudflare config.
 //
-// To add persistent ISR/data caching later, create an R2 bucket + KV and wire
-// an incrementalCache here (see @opennextjs/cloudflare docs). Not required to
-// deploy — pages just render on demand without it.
-export default defineCloudflareConfig({});
+// incrementalCache (KV binding NEXT_INC_CACHE_KV) stores the prerendered/ISR
+// pages, and enableCacheInterception serves them without booting the whole
+// Next server. Without this, EVERY page request re-rendered from scratch,
+// which blew past the Workers free-plan CPU limit (error 1102) as soon as the
+// custom domain brought real traffic.
+export default defineCloudflareConfig({
+  incrementalCache: kvIncrementalCache,
+  enableCacheInterception: true,
+});

@@ -17,6 +17,14 @@
     "binding": "ASSETS",
     "directory": ".open-next/assets"
   },
+  // Incremental cache for prerendered/ISR pages — served straight from KV so
+  // page requests stop re-rendering the whole app on every hit.
+  "kv_namespaces": [
+    {
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "20ce80c01b2a4bb3878da9916e2092e4"
+    }
+  ],
   "observability": {
     "enabled": true,
     "logs": {
