@@ -18,7 +18,14 @@
     "directory": ".open-next/assets"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false
+    }
   }
   // Server secrets (ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, PADDLE_*, etc.)
   // are NOT stored here. Set them once with:

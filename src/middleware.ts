@@ -6,5 +6,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|sitemap.xml|robots.txt|.*\\.webp$).*)"],
+  // Only the authed areas need the Supabase session refresh + guards. Running
+  // this on every public request wasted Worker CPU we can't spare, and public
+  // pages read cookies directly in their server components anyway.
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/login", "/signup"],
 };
