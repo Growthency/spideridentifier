@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Calendar, ChevronDown, BarChart3 } from "lucide-react";
 
 export const PERIOD_LABELS: Record<string, string> = {
@@ -74,33 +73,19 @@ function Dropdown({
 }
 
 /**
- * Soft navigation — updates the URL's searchParams in place so the dashboard
- * re-renders with the new period/chart WITHOUT a full page reload. The page is
- * force-dynamic, so the server always renders fresh data for the selection.
+ * Hard navigation on purpose: router.push updates the URL but on the deployed
+ * Worker the RSC payload comes back stale, so the dashboard kept showing the
+ * old period/chart. A full document load always re-runs the force-dynamic page
+ * with the new searchParams — verified working on production.
  */
+const go = (period: string, chart: string) => window.location.assign(`/admin?period=${period}&chart=${chart}`);
 
 /** Date-range dropdown (page header). */
 export function PeriodFilter({ period, chart }: { period: string; chart: string }) {
-  const router = useRouter();
-  return (
-    <Dropdown
-      icon={Calendar}
-      value={period}
-      options={PERIOD_LABELS}
-      onSelect={(p) => router.push(`/admin?period=${p}&chart=${chart}`, { scroll: false })}
-    />
-  );
+  return <Dropdown icon={Calendar} value={period} options={PERIOD_LABELS} onSelect={(p) => go(p, chart)} />;
 }
 
 /** Chart-type dropdown (sits on the chart card). */
 export function ChartFilter({ period, chart }: { period: string; chart: string }) {
-  const router = useRouter();
-  return (
-    <Dropdown
-      icon={BarChart3}
-      value={chart}
-      options={CHART_LABELS}
-      onSelect={(c) => router.push(`/admin?period=${period}&chart=${c}`, { scroll: false })}
-    />
-  );
+  return <Dropdown icon={BarChart3} value={chart} options={CHART_LABELS} onSelect={(c) => go(period, c)} />;
 }
