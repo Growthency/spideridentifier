@@ -2,21 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronDown, BarChart3 } from "lucide-react";
-
-export const PERIOD_LABELS: Record<string, string> = {
-  "7d": "Last 7 Days",
-  "30d": "Last 30 Days",
-  this_month: "This Month",
-  last_month: "Last Month",
-  "365d": "Last 365 Days",
-  lifetime: "Lifetime",
-};
-
-export const CHART_LABELS: Record<string, string> = {
-  users: "Daily Active Users",
-  clicks: "Daily Active Clicks",
-  both: "Clicks vs Users",
-};
+import { PERIOD_LABELS, CHART_LABELS } from "@/lib/dashboardOptions";
 
 function Dropdown({
   icon: Icon,

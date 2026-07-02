@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { getAnalyticsSummary, ga4Configured, gscConfigured, gscSearchAnalytics, type GscRow } from "@/lib/google";
 import { ClearCacheButton } from "@/components/admin/ClearCacheButton";
-import { PeriodFilter, ChartFilter, PERIOD_LABELS, CHART_LABELS } from "@/components/admin/DashboardFilters";
+import { PeriodFilter, ChartFilter } from "@/components/admin/DashboardFilters";
+import { PERIOD_LABELS, CHART_LABELS } from "@/lib/dashboardOptions";
 import { DashboardChart } from "@/components/admin/DashboardChart";
 
 // Always render fresh so the period / chart dropdowns (URL searchParams) take
