@@ -25,6 +25,14 @@
       "id": "20ce80c01b2a4bb3878da9916e2092e4"
     }
   ],
+  // Self service binding — the revalidation queue uses it to re-render stale
+  // pages in the background (required by the OpenNext memory queue).
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "spideridentifier"
+    }
+  ],
   "observability": {
     "enabled": true,
     "logs": {
